@@ -1131,6 +1131,10 @@ function cabecera(id){
 
 /* ═══ Render ═══════════════════════════════════════════════════ */
 function render(){
+  /* Aquí y en ningún otro lado: render() es el único punto por el que pasan
+     todos los cambios de estado, así que el enlace nunca queda desfasado. */
+  escribirHash();
+  pintarModo();
   /* render() reemplaza el contenido de #main, así que el SVG dueño del tooltip
      desaparece sin que llegue a dispararse su pointerleave. Sin esto, el
      tooltip se queda flotando con la cifra de una gráfica que ya no está. */
@@ -1144,6 +1148,14 @@ function render(){
   requestAnimationFrame(()=>V[activa].pintar&&V[activa].pintar());
   document.querySelectorAll("#nav .nav-b").forEach(b=>
     b.setAttribute("aria-current",b.dataset.sec===activa?"true":"false"));
+}
+
+/* El estado del modo puede llegar de un clic o de un enlace compartido, así
+   que se pinta desde render() y no desde el manejador del botón. Si no, un
+   enlace anual abría el tablero diciendo "Trimestre móvil". */
+function pintarModo(){
+  document.querySelectorAll(".seg [data-modo]").forEach(b=>
+    b.setAttribute("aria-pressed", b.dataset.modo===modo));
 }
 
 function pintarChips(){
@@ -1201,6 +1213,74 @@ function descargarCSV(){
   URL.revokeObjectURL(a.href);
 }
 
+/* ═══ Enlaces compartibles ═════════════════════════════════════ */
+/* El estado de la vista vive en el hash de la URL para poder mandar por correo
+   "mira la informalidad de Cali en 2024" y que el enlace abra justo ahí. Es
+   importante para una entidad que cita cifras.
+
+   El período se guarda por su CÓDIGO ("2026-06"), nunca por su posición en la
+   grilla. La grilla crece un trimestre cada mes: un enlace que dijera
+   "posición 231" apuntaría a junio hoy y a julio el mes entrante, y quien lo
+   abriera vería una cifra distinta sin enterarse de nada. */
+
+function escribirHash(){
+  const campos=[
+    ["seccion",  activa],
+    ["modo",     modo],
+    ["periodo",  P().codigos[iPer]||""],
+    ["desde",    String(desdeAnio)],
+    ["ciudades", comparar],
+  ];
+  /* Las ciudades se codifican una por una y se unen con coma: la coma no hay
+     que escaparla en un fragmento, así que el enlace se lee bastante mejor
+     que con un separador que salga como %7C. */
+  const h="#"+campos.map(([k,v])=>k+"="+(Array.isArray(v)
+    ? v.map(encodeURIComponent).join(",")
+    : encodeURIComponent(v))).join("&");
+  if(h===location.hash) return;
+  /* replaceState y no location.hash: cambiar de sección no debe llenar el
+     historial con una entrada por clic ni disparar hashchange en bucle.
+
+     El try no sobra. En tablero-completo.html, que se abre con doble clic, el
+     origen es "null" y replaceState lanza SecurityError. Sin esto, la versión
+     portátil se caería en cada render() -- es decir, no funcionaría. Ahí no
+     hay enlace que compartir, así que se sigue de largo sin escribir. */
+  try{
+    history.replaceState(null,"",location.pathname+location.search+h);
+  }catch(e){ /* file://: no se puede reescribir la URL, y no hace falta */ }
+}
+
+function leerHash(){
+  const crudo=location.hash.replace(/^#/,"");
+  if(!crudo) return;
+  const q={};
+  crudo.split("&").forEach(par=>{
+    const i=par.indexOf("=");
+    if(i>0) try{ q[par.slice(0,i)]=decodeURIComponent(par.slice(i+1)); }catch(e){}
+  });
+
+  /* Cada campo se valida contra los datos que hay. Un enlace de hace un año
+     puede nombrar una sección que se renombró o un período que no existe; en
+     ese caso se ignora ese campo y se abre en lo que sí exista. Un enlace
+     viejo tiene que degradarse, no romperse. */
+  if(q.modo==="tm"||q.modo==="an") modo=q.modo;
+  if(SECCIONES.some(x=>x.id===q.seccion)) activa=q.seccion;
+
+  if(q.periodo){
+    const i=P().codigos.indexOf(q.periodo);
+    if(i>=0) iPer=i;
+  }
+  if(/^\d{4}$/.test(q.desde||"")){
+    const anios=P().anios;
+    desdeAnio=Math.min(Math.max(+q.desde,anios[0]),anios[anios.length-1]);
+  }
+  if(q.ciudades!==undefined){
+    comparar=(q.ciudades?q.ciudades.split(","):[])
+      .filter(c=>c!==FOCO&&D.series[modo].general[c])
+      .slice(0,7);
+  }
+}
+
 /* ═══ Arranque ═════════════════════════════════════════════════ */
 /* El tablero funciona de dos formas:
    - archivo unico: los datos vienen embebidos en un <script type="application/json">
@@ -1229,6 +1309,7 @@ const _emb=document.getElementById("datos-embebidos");
      opción, 2007, y el control quedaba inservible. En celular era peor: con
      desdeAnio=2019 ninguna opción coincidía y el desplegable salía en blanco. */
   iPer=P().etiquetas.length-1;
+  leerHash();          // si el enlace pide otra vista, manda el enlace
   pintarPeriodos();
   pintarChips();
   render();
@@ -1239,7 +1320,6 @@ const _emb=document.getElementById("datos-embebidos");
   });
   document.querySelectorAll(".seg [data-modo]").forEach(b=>b.addEventListener("click",()=>{
     modo=b.dataset.modo;
-    document.querySelectorAll(".seg [data-modo]").forEach(x=>x.setAttribute("aria-pressed",x===b));
     iPer=P().codigos.length-1;
     desdeAnio=Math.max(desdeAnio,P().anios[0]);
     pintarPeriodos(); render();
@@ -1254,6 +1334,12 @@ const _emb=document.getElementById("datos-embebidos");
   document.getElementById("btn-csv").addEventListener("click",descargarCSV);
   document.getElementById("btn-print").addEventListener("click",()=>print());
   addEventListener("resize",()=>{clearTimeout(window._rz);window._rz=setTimeout(render,220);});
+
+  /* Alguien pega otro enlace del tablero en la barra de direcciones, o le da
+     a atrás. Sin esto la URL cambiaría y la pantalla se quedaría igual. */
+  addEventListener("hashchange",()=>{
+    leerHash(); pintarPeriodos(); pintarChips(); render();
+  });
 
   document.getElementById("carga").remove();
   document.getElementById("app").style.visibility="visible";

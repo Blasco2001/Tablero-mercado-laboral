@@ -145,7 +145,33 @@ Los anexos del DANE cambian de nombre cada mes y crecen en columnas.
 **No introduzcas índices fijos de fila o columna.** Es lo que hace que el
 proceso sobreviva a las actualizaciones del DANE.
 
-### 5. Detalles de las fuentes
+### 5. El enlace guarda el período por código, no por posición
+
+El estado de la vista vive en el hash de la URL:
+
+```
+#seccion=informal&modo=an&periodo=2024&desde=2021&ciudades=Bogota%20D.C.
+```
+
+El período va como **código** (`2024`, `2026-06`), nunca como índice. La grilla
+de trimestres crece uno cada mes: un enlace que dijera "posición 231"
+apuntaría a junio hoy y a julio el mes entrante, y quien lo abriera vería una
+cifra distinta de la que le mandaron sin enterarse de nada. Para una entidad
+que cita cifras, eso es peor que un enlace roto.
+
+Cada campo se valida contra los datos que existan al abrirlo. Un enlace de hace
+un año puede nombrar un período o una ciudad que ya no están; en ese caso se
+ignora ese campo y se abre en lo que sí exista. Un enlace viejo se degrada, no
+se rompe.
+
+`escribirHash()` se llama desde `render()` y de ningún otro lado: es el único
+punto por el que pasan todos los cambios de estado, así que el enlace no puede
+quedar desfasado. Va con `replaceState` para no llenar el historial con una
+entrada por clic — dentro de un `try`, porque en `tablero-completo.html` el
+origen es `null` y `replaceState` lanza `SecurityError`. Sin ese `try` la
+versión de doble clic se caería en cada render.
+
+### 6. Detalles de las fuentes
 
 - Las poblaciones vienen en miles; el front las convierte a personas al mostrar.
 - La informalidad solo existe desde el primer trimestre de 2021, por el cambio
@@ -343,9 +369,13 @@ Si aparece un módulo nuevo, va en esa misma función.
 
 Ordenado por lo que más aporta primero.
 
-### Pendiente con insumos que ya deberían estar en el repo
+### Bloqueado por falta de insumos
 
 1. **Extraer las morfologías y el logo en blanco de `CCC CLAUDE.pptx`.**
+   **El archivo no está.** No aparece en el repo, ni en el historial de git,
+   ni en el equipo donde se trabajó esto. Hasta que alguien lo aporte, la
+   función `arcos()` se queda como está: es una interpretación del manual,
+   no el arte original.
    El `.pptx` es un ZIP: las imágenes viven en `ppt/media/`. Buena parte del
    arte de plantilla viene en EMF o SVG. Reemplazar la función `arcos()` por
    los arcos reales y usar el logo blanco en el riel azul, en vez del
@@ -353,46 +383,36 @@ Ordenado por lo que más aporta primero.
    Slides: 1-2 logo, 3 morfologías para enmascarar, 4 morfologías para decorar,
    5-7 íconos, 8 íconos de redes.
 
-2. **Sección de descargas con enlace a las fuentes.** Que cualquiera pueda
-   bajar los anexos originales del DANE y el CSV procesado. Hoy el botón de
-   descarga genera el CSV pero no hay enlace a los `.xlsx` de origen. Vale la
-   pena que `etl.py` guarde también la URL de descarga del DANE en `meta`.
-
 ### Publicación y automatización
 
-3. **Dejar andando GitHub Pages.** El workflow ya está completo (cron diario,
+2. **Dejar andando GitHub Pages.** El workflow ya está completo (cron diario,
    descarga, ETL, verificación, *issue* al fallar), pero falta el paso manual
    que nadie puede automatizar: entrar a Settings -> Pages del repositorio y
    elegir **GitHub Actions** como origen. Hasta que alguien haga eso, el
    workflow corre y falla en el último paso.
 
-4. **Ayudar a incrustarlo en WordPress.** El `iframe` de altura fija es
+3. **Ayudar a incrustarlo en WordPress.** El `iframe` de altura fija es
    incómodo. Vale la pena un pequeño script `postMessage` que le informe al
    contenedor la altura real, con instrucciones para el equipo de web. En
    celular conviene ofrecer el enlace directo en vez del `iframe`.
 
-5. **Enlaces compartibles.** Que la sección, el modo temporal, el período y
-   las ciudades comparadas queden en el hash de la URL. Es lo que permite
-   mandar por correo "mira la informalidad de Cali en 2024" y que abra ahí.
-   Importante para una entidad que cita cifras.
-
 ### Calidad
 
-6. **Accesibilidad.** Las gráficas SVG necesitan `<title>` y `aria-label`
+4. **Accesibilidad.** Las gráficas SVG necesitan `<title>` y `aria-label`
    descriptivos, y una alternativa en tabla para lectores de pantalla. Revisar
    contraste de los textos secundarios sobre blanco maceta.
 
-7. **Metadatos.** `og:image`, `og:description`, favicon con el isotipo. Cuando
+5. **Metadatos.** `og:image`, `og:description`, favicon con el isotipo. Cuando
    alguien comparta el enlace en LinkedIn o WhatsApp, tiene que verse la marca.
 
-8. **Peso.** `datos.json` pesa 1,75 MB (unos 400 KB comprimido). Se puede
+6. **Peso.** `datos.json` pesa 1,75 MB (unos 400 KB comprimido). Se puede
    bajar bastante separando el archivo por módulo y cargando bajo demanda, o
    recortando la precisión de los niveles. No es urgente, pero en conexiones
    lentas se nota.
 
 ### Referencia de diseño
 
-9. **Revisar el monitor de la Secretaría de Desarrollo Económico de Bogotá**
+7. **Revisar el monitor de la Secretaría de Desarrollo Económico de Bogotá**
    (`https://observatorio.desarrolloeconomico.gov.co/monitor-mercado-laboral-en-cifras/`),
    que es la referencia que pidió el cliente. Extraer ideas de estructura y
    navegación, no de estética: la identidad visual acá es la de la CCC.
