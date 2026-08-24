@@ -1134,6 +1134,10 @@ function cabecera(id){
 
 /* ═══ Render ═══════════════════════════════════════════════════ */
 function render(){
+  /* render() reemplaza el contenido de #main, así que el SVG dueño del tooltip
+     desaparece sin que llegue a dispararse su pointerleave. Sin esto, el
+     tooltip se queda flotando con la cifra de una gráfica que ya no está. */
+  ocultarTip();
   const t=tema();
   document.documentElement.style.setProperty("--acento",t.c);
   document.documentElement.style.setProperty("--acento-suave",t.suave);
@@ -1223,9 +1227,12 @@ const _emb=document.getElementById("datos-embebidos");
   comparar=comparar.filter(c=>d.series.tm.general[c]);
   /* En celular, 232 trimestres en 360 px no se leen: se arranca más cerca */
   if(innerWidth<760){ desdeAnio=2019; comparar=comparar.slice(0,2); }
-  pintarPeriodos();
+  /* iPer ANTES de pintarPeriodos(): la lista de "Serie desde" se arma con los
+     años hasta el período elegido, así que pintar primero dejaba una sola
+     opción, 2007, y el control quedaba inservible. En celular era peor: con
+     desdeAnio=2019 ninguna opción coincidía y el desplegable salía en blanco. */
   iPer=P().etiquetas.length-1;
-  document.getElementById("sel-per").value=iPer;
+  pintarPeriodos();
   pintarChips();
   render();
 
