@@ -85,12 +85,51 @@ def norm(txt) -> str:
     return s.lower()
 
 
+# Los agregados no son ciudades y el DANE los escribe distinto en cada hoja y
+# en cada anexo. Solo del nacional aparecen "Total nacional", "Total Nacional"
+# y "TOTAL NACIONAL"; de los otros dos, con y sin el prefijo "Total" y con
+# "areas metropolitanas" escrito entero o abreviado.
+#
+# Se resuelven contra esta tabla por su forma normalizada, ANTES de cualquier
+# otra regla. Antes se parchaban con .replace() encadenados sobre el texto ya
+# convertido a Title Case, y eso tenia dos problemas: no cubria las variantes
+# sin prefijo, y sobre un texto que ya decia "Total 13 ciudades y A.M." volvia
+# a anteponer el prefijo y producia "Total Total 13 ciudades y A.M.".
+#
+# Que los tres agregados tengan UN solo nombre no es cosmetico: son la misma
+# entidad, y dos grafias distintas la parten en dos filas del selector de
+# ciudades, cada una con la mitad de los datos.
+def _alias_agregados() -> dict:
+    tabla = {}
+    for canon, variantes in (
+        ("Total nacional", ["total nacional", "nacional"]),
+        ("Total 13 ciudades y A.M.", ["13 ciudades y areas metropolitanas",
+                                      "13 ciudades y a.m.", "13 ciudades y a.m",
+                                      "13 areas"]),
+        ("Total 23 ciudades y A.M.", ["23 ciudades y areas metropolitanas",
+                                      "23 ciudades y a.m.", "23 ciudades y a.m",
+                                      "23 areas"]),
+    ):
+        for v in variantes:
+            tabla[v] = canon
+            tabla[f"total {v}"] = canon
+    return tabla
+
+
+AGREGADOS = _alias_agregados()
+
+
 def titulo_ciudad(txt) -> str:
     """'CALI A.M.' / 'Cali A.M.' -> 'Cali A.M.' (sin tildes, forma canonica)."""
     s = str(txt).strip()
     s = unicodedata.normalize("NFKD", s)
     s = "".join(c for c in s if not unicodedata.combining(c))
     s = re.sub(r"\s+", " ", s)
+
+    agregado = AGREGADOS.get(s.lower())
+    if agregado:
+        return agregado
+
     # Title case respetando siglas A.M. y D.C.
     partes = []
     for w in s.split(" "):
@@ -98,13 +137,7 @@ def titulo_ciudad(txt) -> str:
             partes.append(w.upper())
         else:
             partes.append(w.capitalize())
-    s = " ".join(partes)
-    s = s.replace("Total 23 Ciudades Y Areas Metropolitanas", "Total 23 ciudades y A.M.")
-    s = s.replace("Total 13 Ciudades Y Areas Metropolitanas", "Total 13 ciudades y A.M.")
-    s = s.replace("23 Ciudades Y A.M.", "Total 23 ciudades y A.M.")
-    s = s.replace("13 Ciudades Y A.M.", "Total 13 ciudades y A.M.")
-    s = s.replace("13 Ciudades Y A.M", "Total 13 ciudades y A.M.")
-    return s
+    return " ".join(partes)
 
 
 def num(v):

@@ -19,7 +19,9 @@ entiende que cambio y luego actualiza la prueba a conciencia.
 """
 
 import json
+import re
 import sys
+import unicodedata
 from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent
@@ -35,6 +37,18 @@ def check(nombre, condicion, detalle=""):
     else:
         print(f"  FALLA {nombre}" + (f" -> {detalle}" if detalle else ""))
         fallos.append(nombre)
+
+
+def normalizar(txt):
+    """Minusculas, sin tildes, sin espacios repetidos. Igual que en etl.py.
+
+    Se repite aqui a proposito en vez de importar etl: verificar.py comprueba
+    el resultado, y si usara la misma funcion que lo produjo dejaria de ser
+    una comprobacion independiente.
+    """
+    s = unicodedata.normalize("NFKD", str(txt).strip())
+    s = "".join(c for c in s if not unicodedata.combining(c))
+    return re.sub(r"\s+", " ", s).lower()
 
 
 def aviso(nombre, detalle):
@@ -151,6 +165,26 @@ def main():
     check("la informalidad no existe antes de 2021",
           all(v is None for v in inf[:i2020_dic + 1]))
     check("la informalidad si existe en el ultimo trimestre", inf[-1] is not None)
+
+    # Los agregados venian escritos distinto en cada anexo: el modulo general
+    # decia "Total nacional" y el de informalidad "Total Nacional". Eso parte
+    # la misma entidad en dos filas del selector, cada una con la mitad de los
+    # datos. titulo_ciudad() los resuelve contra una tabla de alias; esto
+    # comprueba que ninguna variante nueva se vuelva a escapar.
+    colisiones = {}
+    for c in d["ciudades"]:
+        colisiones.setdefault(normalizar(c), []).append(c)
+    repetidas = {k: v for k, v in colisiones.items() if len(v) > 1}
+    check("ninguna entidad aparece dos veces con distinta grafia",
+          not repetidas,
+          "; ".join(f"{k} -> {v}" for k, v in repetidas.items()))
+
+    # Y que los tres agregados esten, escritos como toca
+    for esperado in ("Total nacional", "Total 13 ciudades y A.M.",
+                     "Total 23 ciudades y A.M."):
+        check(f"'{esperado}' existe con esa grafia exacta",
+              esperado in d["ciudades"],
+              f"hay: {[c for c in d['ciudades'] if 'otal' in c]}")
 
     # ── 7. Rangos plausibles ─────────────────────────────────────────
     print("\n7. Los numeros caen donde deben")
