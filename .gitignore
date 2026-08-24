@@ -4,3 +4,9 @@ __pycache__/
 
 # Basura del sistema
 .DS_Store
+
+# Fuentes corporativas: licencia de ESCRITORIO, no web.
+# Solo hay .otf y .ttf, ningún .woff2, y ningún archivo de licencia. Comitearlas
+# en un repo que se hace público para GitHub Pages sería redistribuirlas.
+# Los originales viven en marca/fuentes/ en local. Ver docs/assets/fonts/LEEME.txt
+marca/fuentes/

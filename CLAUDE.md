@@ -37,7 +37,8 @@ docs/                        Lo que se publica
   index.html                 El tablero entero: HTML + CSS + JS en un archivo
   datos.json                 Generado por etl.py. No se edita a mano.
   assets/
-    LogoCCCPrincipal.jpg
+    logo-ccc-blanco.svg      Logo en blanco, para el riel azul
+    LogoCCCPrincipal.jpg     Logo a color, sin usar hoy (sirve para og:image)
     fonts/                   Ver LEEME.txt
 tablero-completo.html        Versión de un solo archivo, abre con doble clic
 .github/workflows/           Construye y publica en GitHub Pages
@@ -223,13 +224,37 @@ publicarlas en un sitio web. Se necesita licencia *webfont*.
 
 ### Morfologías
 
-Los arcos de las cabeceras y las tarjetas están generados por código en la
-función `arcos()`, a partir de la descripción del manual: aros fragmentados en
-seis partes, esquinas redondeadas, composiciones de uno a tres arcos con al
-menos una esquina en contacto.
+Los trazos son **el arte original de la marca**, extraído de
+`marca/CCC_PlantillaPPTX.pptx` (slide 4) y guardado en la constante
+`MORFOLOGIAS` de `index.html`. Ya no son una interpretación.
 
-Son una interpretación. Si aparecen los archivos originales de la marca, hay
-que reemplazarlos.
+Las reglas, verificadas contra el brandbook (págs. 79-86):
+
+- Los aros nacen del concepto **Nexo Vital**: tres aros por los tres motores de
+  la CCC — capital social, empresas esenciales, conexión global.
+- Se **fragmentan en seis partes iguales**. De ahí sale el arco, que es la
+  unidad mínima y existe en **tres tamaños**, uno por aro.
+- **Un arco solo lleva todas sus esquinas redondeadas.**
+- **En composición, las esquinas que se tocan o se alinean van RECTAS**; las
+  que quedan libres conservan el redondeo. Esto es más preciso de lo que decía
+  antes esta nota ("al menos una esquina en contacto"): lo que manda no es que
+  se toquen, sino cómo se resuelve la esquina cuando se tocan.
+- Las composiciones van **de uno a tres arcos**, y pueden mezclar arcos de
+  distintos tamaños.
+
+**Los colores no se copian del arte.** El original viene siempre en azules;
+cada trazo guarda su nivel de tono (0 el más oscuro, 2 el más claro) y quien
+llama a `arcos()` decide qué color va en cada nivel. Así cada sección conserva
+su momento cromático. Por eso `TEMAS` tiene un tercer tono, `claro`, tomado de
+las escalas UI del Nexus que ya estaban en `:root`.
+
+En el riel azul la jerarquía **se invierte**: el trazo que en el arte es el más
+oscuro se dibuja con el tono más claro del tema, o desaparece contra el fondo.
+
+El azul sereno del arte venía como `#12186B`, un dígito por debajo del
+`#12176B` que fija el brandbook. Se normalizó. Es una inconsistencia del PPTX,
+no un cambio de marca: sus propios íconos de redes traen el valor bueno. Lo
+mismo con el violeta de los íconos, `#5E26B5` contra `#5F27B5`.
 
 ---
 
@@ -369,19 +394,34 @@ Si aparece un módulo nuevo, va en esa misma función.
 
 Ordenado por lo que más aporta primero.
 
-### Bloqueado por falta de insumos
+### Insumos de marca
 
-1. **Extraer las morfologías y el logo en blanco de `CCC CLAUDE.pptx`.**
-   **El archivo no está.** No aparece en el repo, ni en el historial de git,
-   ni en el equipo donde se trabajó esto. Hasta que alguien lo aporte, la
-   función `arcos()` se queda como está: es una interpretación del manual,
-   no el arte original.
-   El `.pptx` es un ZIP: las imágenes viven en `ppt/media/`. Buena parte del
-   arte de plantilla viene en EMF o SVG. Reemplazar la función `arcos()` por
-   los arcos reales y usar el logo blanco en el riel azul, en vez del
-   contenedor blanco que hay hoy como solución de contraste.
-   Slides: 1-2 logo, 3 morfologías para enmascarar, 4 morfologías para decorar,
-   5-7 íconos, 8 íconos de redes.
+Los originales están en `marca/`: `CCC_PlantillaPPTX.pptx` (53 MB),
+`CCC_Brandbook_2026.pdf` (24 MB) y `fuentes/`. El `.pptx` es un ZIP y sus
+imágenes viven en `ppt/media/`: **255 SVG y 258 PNG, ningún EMF**, así que no
+hay que convertir nada.
+
+Qué hay en cada slide: 1-2 logo (azul y blanco, cuatro proporciones cada uno),
+3 morfologías para enmascarar, 4 morfologías para decorar, 5-7 íconos, 8 íconos
+de redes.
+
+Ya integrados: las morfologías del slide 4 y el logo blanco del slide 2.
+
+1. **Queda pendiente, si algún día hace falta:**
+   - Las **224 iconos** de los slides 5 a 8 (mediana ~1,2 KB). No se
+     extrajeron porque hoy el tablero no tiene dónde ponerlos: la navegación
+     usa las morfologías. Los 7 del slide 8 son de redes sociales y ya vienen
+     en el azul sereno correcto.
+   - Las **morfologías para enmascarar del slide 3**, que no son imágenes sino
+     cuatro formas nativas de PowerPoint (`custGeom`). Convertirlas exige
+     interpretar geometría DrawingML. Sirven para recortar fotografías, algo
+     que este tablero no hace.
+
+**`marca/fuentes/` está en `.gitignore`**, a propósito. Solo trae `.otf` y
+`.ttf` — formato de escritorio —, no hay ningún archivo de licencia en la
+carpeta, y las fuentes no declaran términos: el metadato de licencia viene
+vacío y el copyright dice "All rights reserved". Comitearlas en un repo que se
+hace público para GitHub Pages sería redistribuirlas.
 
 ### Publicación
 
