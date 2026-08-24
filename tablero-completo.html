@@ -1185,8 +1185,16 @@ function pintarPeriodos(){
   sel.value=iPer;
   const anios=[...new Set(p.anios)].sort((a,b)=>a-b);
   const sd=document.getElementById("sel-desde");
-  sd.innerHTML=anios.filter(a=>a<=p.anios[iPer]).map(a=>`<option value="${a}">${a}</option>`).join("");
-  if(desdeAnio<anios[0]) desdeAnio=anios[0];
+  /* Solo se ofrecen años hasta el período elegido: "serie desde 2019" mirando
+     Ene-Mar 2010 no querría decir nada. */
+  const opciones=anios.filter(a=>a<=p.anios[iPer]);
+  sd.innerHTML=opciones.map(a=>`<option value="${a}">${a}</option>`).join("");
+  /* Si el año guardado no está entre las opciones, se cae al primero. Dejarlo
+     fuera de rango deja el <select> sin nada seleccionado -- el control se
+     dibuja en blanco, existe pero no dice nada -- y además la gráfica se queda
+     buscando un año que no está en el eje. Pasa por arriba (desdeAnio=2019,
+     que es como arranca en celular, con un período de 2010) y por abajo. */
+  if(opciones.length && !opciones.includes(desdeAnio)) desdeAnio=opciones[0];
   sd.value=desdeAnio;
 }
 
