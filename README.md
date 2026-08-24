@@ -1,7 +1,10 @@
-# Observatorio de mercado laboral · Cámara de Comercio de Cali
+# Visor de seguimiento al mercado laboral · Cámara de Comercio de Cali
 
 Tablero interactivo con las cifras de mercado laboral de **Cali A.M.**, con
 fuente en la Gran Encuesta Integrada de Hogares del DANE.
+
+El nombre público del tablero es **Visor de seguimiento al mercado laboral**.
+El repositorio conserva su nombre original, `Tablero-mercado-laboral`.
 
 ---
 

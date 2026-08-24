@@ -3,8 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Observatorio de mercado laboral · Cámara de Comercio de Cali</title>
-<meta name="description" content="Indicadores de mercado laboral de Cali A.M. con fuente en la Gran Encuesta Integrada de Hogares del DANE.">
+<title>Visor de seguimiento al mercado laboral · Cámara de Comercio de Cali</title>
+<meta name="description" content="Visor de seguimiento al mercado laboral de Cali A.M., con fuente en la Gran Encuesta Integrada de Hogares del DANE. Comparable con las otras 22 ciudades y áreas metropolitanas del país.">
+<meta property="og:title" content="Visor de seguimiento al mercado laboral · Cámara de Comercio de Cali">
+<meta property="og:description" content="Indicadores de mercado laboral de Cali A.M. con fuente en la GEIH del DANE. Se actualiza cada mes.">
+<meta property="og:type" content="website">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Encode+Sans+Expanded:wght@300;400;600;700&family=Archivo:wdth,wght@100..125,400..800&family=Source+Sans+3:ital,wght@0,300..700;1,300..700&display=swap" rel="stylesheet">
@@ -113,7 +116,9 @@ button,select,input{font:inherit;color:inherit}
 /* El logo va en su versión blanca, directo sobre el azul del riel. Antes era
    el logo a color dentro de una caja blanca, que era la salida para el
    contraste; el manual prevé una versión blanca justamente para esto. */
-.rail-logo{display:block;padding:2px 4px 0}
+/* El padding lateral reproduce el ancho que tenía el logo dentro del
+   recuadro blanco (13px 15px), que se veía mejor proporcionado en el riel. */
+.rail-logo{display:block;padding:0 15px}
 .rail-logo img{width:100%;height:auto;display:block}
 .rail-sub{
   font-family:var(--display);font-stretch:112%;font-weight:300;font-size:11.5px;
@@ -182,7 +187,16 @@ main{padding:26px 26px 60px}
 .seccion[hidden]{display:none}
 .cab{display:flex;gap:15px;align-items:flex-start;margin-bottom:20px}
 .cab-arcos{flex:0 0 46px;margin-top:2px}
-.cab h2{font-size:26px;margin-bottom:3px}
+/* El nombre del tablero es el título de la página y manda en la jerarquía;
+   el de la sección va debajo, en el color del tema, que ya la distingue. */
+.cab-tablero{
+  font-family:var(--display);font-stretch:112%;font-weight:700;
+  font-size:25px;color:var(--azul-sereno);margin-bottom:5px;line-height:1.2;
+}
+.cab h2{
+  font-size:15px;font-weight:700;color:var(--acento);
+  letter-spacing:.02em;margin-bottom:4px;
+}
 .cab p{color:var(--tinta-2);font-size:14.5px;max-width:74ch}
 
 /* ── Tarjetas KPI ──────────────────────────────────────────────── */
@@ -285,7 +299,7 @@ tbody tr.foco td:first-child{background:var(--a100)}
   .app{grid-template-columns:1fr}
   .rail{position:static;height:auto;flex-direction:column}
   .rail-marca{display:flex;align-items:center;gap:13px;padding:13px 14px 10px}
-  .rail-logo{flex:0 0 148px;padding:0}
+  .rail-logo{flex:0 0 148px;padding:0 6px}
   .rail-sub{margin-top:0;font-size:12px}
   .rail nav{flex-direction:row;overflow-x:auto;padding:4px 12px 14px}
   .rail-titulo{display:none}.rail-pie{display:none}
@@ -319,7 +333,6 @@ tbody tr.foco td:first-child{background:var(--a100)}
   <aside class="rail">
     <div class="rail-marca">
       <span class="rail-logo"><img src="assets/logo-ccc-blanco.svg" alt="Cámara de Comercio de Cali"></span>
-      <p class="rail-sub">Observatorio de<br>mercado laboral</p>
     </div>
     <nav id="nav" aria-label="Secciones del tablero"></nav>
     <div class="rail-pie">
@@ -367,7 +380,7 @@ tbody tr.foco td:first-child{background:var(--a100)}
 <script>
 "use strict";
 /* ═══════════════════════════════════════════════════════════════════
-   Observatorio de mercado laboral · Cámara de Comercio de Cali
+   Visor de seguimiento al mercado laboral · Cámara de Comercio de Cali
    Gráficas en SVG puro: sin dependencias, sin CDN, sin build.
    Reglas de marca aplicadas: extremos redondeados, gradaciones sólo
    verticales (90°) con el tono oscuro en la base, datos ordenados por
@@ -384,7 +397,7 @@ const SECCIONES = [
   {id:"informal",  nom:"Informalidad",        tema:"chontaduro", desc:"Proporción y composición del empleo informal desde 2021."},
   {id:"juventud",  nom:"Juventud",            tema:"violeta",    desc:"Mercado laboral de las personas entre 15 y 28 años."},
   {id:"ciudades",  nom:"Comparativo ciudades",tema:"viche",      desc:"Cali frente a las demás capitales del país."},
-  {id:"datos",     nom:"Datos y método",      tema:"azul",       desc:"De dónde sale cada cifra y cómo se actualiza el tablero."},
+  {id:"datos",     nom:"Fuentes y metodología",tema:"azul",       desc:"De dónde sale cada cifra y cómo se calcula."},
 ];
 
 /* `claro` es el tercer tono que piden las morfologías: el arte original
@@ -392,6 +405,8 @@ const SECCIONES = [
    equivalente. Sale de las escalas UI del Nexus que ya están en :root, así
    que no se inventa ningún color. `suave` sigue siendo para fondos: sobre
    blanco no se vería. */
+const NOMBRE_TABLERO = "Visor de seguimiento al mercado laboral";
+
 const TEMAS = {
   azul:      {c:"#253D90", suave:"#DAEDFF", fuerte:"#12176B", claro:"#90CEFF"},
   feijo:     {c:"#1D846E", suave:"#D2F5E9", fuerte:"#1A473E", claro:"#A4EBD4"},
@@ -892,9 +907,8 @@ V.resumen=()=>{
   </div>
   <div class="grid g-23">
     ${panel("Desempleo en Cali A.M.","Serie comparativa · "+(ANUAL()?"promedio anual":"trimestre móvil"),
-      `<div id="g-res-td"></div>`,"",
-      "La línea gruesa azul sereno es Cali A.M. Pasa el cursor sobre la gráfica para leer todos los valores de un período.")}
-    ${panel("Cómo se compone la fuerza de trabajo","Cali A.M. · "+p,`<div id="g-res-anillo"></div><div id="l-res-anillo"></div>`)}
+      `<div id="g-res-td"></div>`)}
+    ${panel("Composición de la fuerza de trabajo","Cali A.M. · "+p,`<div id="g-res-anillo"></div><div id="l-res-anillo"></div>`)}
   </div>
   <div class="grid g-3">
     ${panel("Brecha de género en el desempleo","Puntos porcentuales: mujeres menos hombres",`<div id="g-res-genero"></div>`)}
@@ -902,8 +916,7 @@ V.resumen=()=>{
     ${panel("Desempleo juvenil","Personas entre 15 y 28 años",`<div id="g-res-jov"></div>`)}
   </div>
   <div class="grid">
-    ${panel("Ranking de desempleo entre ciudades",`23 ciudades y áreas metropolitanas · ${p}`,`<div id="g-res-rank"></div>`,"",
-      "Datos ordenados de mayor a menor, como pide el sistema de identidad. Cali A.M. aparece resaltada en azul sereno.")}
+    ${panel("Ranking de desempleo entre ciudades",`23 ciudades y áreas metropolitanas · ${p}`,`<div id="g-res-rank"></div>`)}
   </div>`;
 };
 V.resumen.pintar=()=>{
@@ -951,8 +964,8 @@ V.panorama=()=>`
   </div>
   <div class="grid g-23">
     ${panel("Ocupados y desocupados en Cali A.M.","Niveles en personas",`<div id="g-pan-niv"></div><div id="l-pan-niv"></div>`)}
-    ${panel("De dónde sale cada cifra","Cali A.M. · "+P().etiquetas[iPer],`<div id="g-pan-est"></div>`,"",
-      "Cada barra reparte el nivel de arriba. Así se ve que los desocupados son una fracción pequeña de la población en edad de trabajar, aunque la tasa de desempleo los mida solo contra la fuerza de trabajo.")}
+    ${panel("Estructura del mercado laboral","Cali A.M. · "+P().etiquetas[iPer],`<div id="g-pan-est"></div>`,"",
+      "La tasa de desempleo se calcula sobre la fuerza de trabajo, no sobre el total de población en edad de trabajar.")}
   </div>`;
 V.panorama.pintar=()=>{
   ["td","to","tgp","ts"].forEach(k=>pintarComparativa("g-pan-"+k,"general",k,"%"));
@@ -1131,8 +1144,7 @@ V.datos=()=>`
         <li><b>Género:</b> anexo de mercado laboral por sexo, hojas de hombres y mujeres.</li>
         <li><b>Informalidad:</b> anexo de empleo informal y seguridad social. Serie desde ${esc(D.meta.inicio_informalidad)}.</li>
         <li><b>Juventud:</b> anexo de mercado laboral de la juventud, 15 a 28 años.</li>
-      </ul>
-      <p class="nota">Archivos procesados en esta versión:<br>${Object.values(D.meta.archivos).map(a=>esc(a.archivo)).join("<br>")}</p>`)}
+      </ul>`)}
     ${panel("Cómo se calcula el promedio anual","Nota metodológica",`
       <p style="font-size:14px;line-height:1.7">El promedio del año se arma con los cuatro trimestres
       móviles que <b>no se traslapan</b>: Ene-Mar, Abr-Jun, Jul-Sep y Oct-Dic. Así cada mes del año
@@ -1145,18 +1157,8 @@ V.datos=()=>`
       ${(D.meta.anios_parciales||[]).length?`<p class="nota"><b>Año en curso:</b>
       ${D.meta.anios_parciales.join(", ")} todavía no tiene los cuatro trimestres, así que se promedia
       con los disponibles y aparece marcado en el selector de período.</p>`:""}`)}
-    ${panel("Cómo se actualiza","Cada mes, solo",`
-      <ol style="padding-left:19px;line-height:1.85;font-size:14px">
-        <li>Todos los días se revisa si el DANE publicó anexos nuevos.</li>
-        <li>Si los hay, se procesan y se comprueban contra un juego de pruebas.</li>
-        <li>Solo si todas las pruebas pasan, el tablero se vuelve a publicar.</li>
-      </ol>
-      <p class="nota">Si una comprobación falla, el tablero <b>no</b> se actualiza y queda mostrando las
-      cifras del mes anterior hasta que una persona revise qué pasó. Es preferible una cifra vieja a una
-      equivocada.</p>
-      <p class="nota">La lectura de los anexos no depende de números de fila ni de columna: busca las
-      etiquetas de texto en cada hoja, así que sigue funcionando cuando el DANE agrega períodos o mueve
-      bloques.</p>`)}
+  </div>
+  <div class="grid g-1">
     ${panel("Advertencias de lectura","Antes de citar una cifra",`
       <ul style="padding-left:19px;line-height:1.85;font-size:14px">
         <li>Las poblaciones vienen en miles y aquí se muestran ya convertidas a personas.</li>
@@ -1164,8 +1166,6 @@ V.datos=()=>`
         <li>Entre 2010 y 2020 la información ya incorpora los ajustes de población del cambio de marco de 2021.</li>
         <li>Cali A.M. incluye a Cali y Yumbo.</li>
       </ul>`)}
-  </div>
-  <div class="grid g-1">
     ${panel("Descargas","Los archivos originales y los datos ya procesados",`
       <ul class="desc-lista">
         ${ETIQUETAS_MODULO.map(([mod,nom,det])=>{
@@ -1206,8 +1206,11 @@ V.datos.pintar=()=>{
 
 function cabecera(id){
   const s=SECCIONES.find(x=>x.id===id), t=TEMAS[s.tema];
+  /* El nombre del tablero manda y la sección queda subordinada: quien llega
+     por un enlace directo tiene que saber primero qué está mirando. */
   return `<div class="cab"><div class="cab-arcos">${arcos([t.fuerte,t.c,t.claro],46,"trio")}</div>
-    <div><h2>${esc(s.nom)}</h2><p>${esc(s.desc)}</p></div></div>`;
+    <div><h1 class="cab-tablero">${esc(NOMBRE_TABLERO)}</h1>
+      <h2>${esc(s.nom)}</h2><p>${esc(s.desc)}</p></div></div>`;
 }
 
 /* ═══ Render ═══════════════════════════════════════════════════ */

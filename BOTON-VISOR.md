@@ -4,8 +4,10 @@ Para el equipo de web de la CCC. Va en
 `ccc.org.co/informacion-y-estudios-economicos/visor-de-datos/`, entre los
 visores vigentes — **no** en "Visores históricos".
 
-Redactado siguiendo el estilo de los botones que ya están en esa página:
-sintagma nominal, sin verbo, empezando por "Visor de Datos".
+Redactado en el estilo de los botones que ya están en esa página: sintagma
+nominal, sin verbo, empezando por "Visor". Los vigentes usan la fórmula "Visor
+de Datos ..."; este usa "Visor de seguimiento al ...", que es el nombre que la
+CCC le puso al tablero.
 
 ---
 
@@ -14,7 +16,7 @@ sintagma nominal, sin verbo, empezando por "Visor de Datos".
 **Título**
 
 ```
-Visor de Datos Observatorio de Mercado Laboral
+Visor de seguimiento al mercado laboral
 ```
 
 **Descripción corta**
@@ -42,14 +44,14 @@ https://observatoriolaboral.ccc.org.co/
 ## Variantes, por si el título no cabe
 
 El más largo que hay hoy en esa página es "Visor de Datos Tejido empresarial
-del suroccidente de Colombia" (58 caracteres), así que el propuesto (45) entra
+del suroccidente de Colombia" (58 caracteres), así que el propuesto (39) entra
 sin problema. Si aun así hiciera falta acortarlo:
 
 | Variante | Caracteres |
 |----------|-----------|
-| Visor de Datos Observatorio de Mercado Laboral | 45 |
-| Observatorio de Mercado Laboral de Cali | 39 |
-| Visor de Datos Mercado Laboral | 30 |
+| Visor de seguimiento al mercado laboral | 39 |
+| Visor de seguimiento al mercado laboral de Cali | 47 |
+| Visor de mercado laboral | 24 |
 
 ## Descripción, versión de una línea
 

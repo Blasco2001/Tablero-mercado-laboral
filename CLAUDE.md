@@ -8,7 +8,7 @@ que ya se tomaron con criterio; cambiarlas sin entenderlas rompe las cifras.
 
 ## Qué es esto
 
-Observatorio de mercado laboral de la **Cámara de Comercio de Cali**. Una
+**Visor de seguimiento al mercado laboral** de la **Cámara de Comercio de Cali**. Una
 aplicación web estática que publica los indicadores de mercado laboral de
 **Cali A.M.**, con fuente en la Gran Encuesta Integrada de Hogares (GEIH) del
 DANE, y permite compararlos contra las otras 22 ciudades y áreas
