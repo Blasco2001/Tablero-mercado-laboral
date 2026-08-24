@@ -63,14 +63,21 @@ def main():
         html = re.sub(r'<script id="datos-embebidos".*?</script>\n', "", html, flags=re.S)
     html = html.replace('<script>\n"use strict";', bloque + '"use strict";', 1)
 
-    # 3. Si las fuentes de marca aun no estan, se quitan sus @font-face:
-    #    de lo contrario el navegador intenta cargarlas y llena la consola
-    #    de errores que no significan nada.
-    faltan = [n for n in re.findall(r"url\('(assets/fonts/[^']+)'\)", html)
-              if not (RAIZ / "docs" / n).exists()]
-    if faltan:
-        html = re.sub(r"@font-face\{[^}]*assets/fonts/[^}]*\}\n?", "", html)
-        print(f"        {len(faltan)} fuente(s) de marca no están todavía: se usan las sustitutas")
+    # 3. Las fuentes de marca no se publican todavia. En docs/index.html sus
+    #    @font-face estan comentados, asi que aqui no hay nada que hacer: el
+    #    navegador no las pide y no hay 404 que limpiar.
+    #
+    #    La red de seguridad se queda por si alguien los descomenta sin poner
+    #    los .woff2 al lado. En ese caso se vuelven a quitar, porque un archivo
+    #    portatil que va por correo no puede depender de rutas que no existen.
+    if "FUENTES DE MARCA · DESACTIVADAS" in html:
+        print("        fuentes de marca desactivadas en el HTML: se usan las sustitutas")
+    else:
+        faltan = [n for n in re.findall(r"url\('(assets/fonts/[^']+)'\)", html)
+                  if not (RAIZ / "docs" / n).exists()]
+        if faltan:
+            html = re.sub(r"@font-face\{[^}]*assets/fonts/[^}]*\}\n?", "", html)
+            print(f"        {len(faltan)} fuente(s) de marca no están todavía: se usan las sustitutas")
 
     # 4. Aviso al pie para que nadie confunda esta copia con la publicada
     html = html.replace(

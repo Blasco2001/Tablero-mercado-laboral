@@ -1,27 +1,60 @@
 Fuentes institucionales
 =======================
 
-El tablero busca primero las fuentes de marca y, si no las encuentra, usa
-sustitutas de Google Fonts. Para activar las reales, pon aquí estos archivos
-con exactamente estos nombres:
+Estado actual: DESACTIVADAS. En docs/index.html los cuatro @font-face están
+comentados dentro de un bloque marcado
 
-    SaviorSans-ExpandedLight.woff2
-    SaviorSans-ExpandedBold.woff2
-    Libertad-Regular.woff2
-    Libertad-Bold.woff2
+    FUENTES DE MARCA · DESACTIVADAS
 
-No hay que tocar nada más: el @font-face ya está declarado en index.html.
+Están comentados a propósito. Sin los .woff2 al lado, el navegador pedía
+cuatro archivos inexistentes y el sitio publicado devolvía cuatro 404 en cada
+carga, con el logo de la Cámara encima.
 
-Dos advertencias:
 
-1. Savior Sans (Sudtipos) y Libertad (TipoType) son fuentes comerciales. La
-   licencia de escritorio NO cubre publicarlas en un sitio web: se necesita
-   licencia webfont. Confírmalo antes de subirlas.
+Para activarlas
+---------------
 
-2. Si solo tienes .otf o .ttf, conviértelos a .woff2 con
-   https://www.fontsquirrel.com/tools/webfont-generator o con woff2_compress.
-   El .woff2 pesa la tercera parte y carga mucho más rápido.
+1. Pon aquí los cuatro archivos, con exactamente estos nombres:
 
-Mientras tanto se usan:
-    Savior Sans Expanded -> Encode Sans Expanded (grotesca ancha)
-    Libertad             -> Source Sans 3
+       SaviorSans-ExpandedLight.woff2
+       SaviorSans-ExpandedBold.woff2
+       Libertad-Regular.woff2
+       Libertad-Bold.woff2
+
+2. En docs/index.html, quita las dos marcas de comentario que envuelven el
+   bloque: la que abre antes del primer @font-face y la que cierra después
+   del último.
+
+No hay que tocar nada más.
+
+
+Antes de hacerlo: la licencia
+-----------------------------
+
+Savior Sans (Sudtipos) y Libertad (TipoType) son fuentes comerciales.
+
+En marca/fuentes/ están las corporativas, pero **solo en .otf y .ttf**, que
+son formatos de escritorio. No hay ningún .woff ni .woff2, no hay archivo de
+licencia en la carpeta, y las propias fuentes no declaran términos: su
+metadato solo dice "All rights reserved".
+
+    Libertad     Copyright (c) 2014 Fernando Diaz - tipotype.com
+    Savior Sans  Copyright (c) 2022 Andres Ramirez - Sudtipos
+
+La licencia de escritorio NO cubre publicarlas en un sitio web. Hace falta
+licencia webfont, que se compra aparte. Confírmalo con la CCC antes de
+convertir nada y de subirlo.
+
+Si la CCC consigue la licencia webfont, lo más probable es que el proveedor
+entregue ya los .woff2. Si solo llegan .otf, se convierten con
+woff2_compress o con https://www.fontsquirrel.com/tools/webfont-generator
+El .woff2 pesa como un tercio y carga mucho más rápido.
+
+
+Mientras tanto
+--------------
+
+Las sustitutas vienen de Google Fonts y ya están declaradas:
+
+    Savior Sans Expanded  ->  Encode Sans Expanded (grotesca ancha)
+    Libertad              ->  Source Sans 3

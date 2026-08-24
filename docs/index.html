@@ -16,10 +16,34 @@
    cae en Archivo (ancha, sustituta de Savior Sans Expanded) y
    Source Sans 3 (sustituta de Libertad).
    ═══════════════════════════════════════════════════════════════════ */
+/* ┌── FUENTES DE MARCA · DESACTIVADAS ──────────────────────────────────────┐
+   │                                                                        │
+   │  Savior Sans Expanded (Sudtipos) y Libertad (TipoType) son las         │
+   │  tipografías del Nexus Design System. Están comentadas a propósito:    │
+   │  los .woff2 no están en assets/fonts/, así que el navegador pedía      │
+   │  cuatro archivos inexistentes y el sitio publicado devolvía cuatro     │
+   │  404 en cada carga.                                                    │
+   │                                                                        │
+   │  PARA ACTIVARLAS                                                       │
+   │  1. Pon los cuatro .woff2 en docs/assets/fonts/ con esos nombres.      │
+   │  2. Quita las dos marcas de comentario que envuelven este bloque:      │
+   │     la que abre aquí arriba y la que cierra abajo del todo.            │
+   │  No hay que tocar nada más. Ver assets/fonts/LEEME.txt.                │
+   │                                                                        │
+   │  ANTES DE ACTIVARLAS: son fuentes comerciales. La licencia de          │
+   │  escritorio NO cubre publicarlas en un sitio web; hace falta licencia  │
+   │  webfont. En marca/fuentes/ solo hay .otf y .ttf, que es formato de    │
+   │  escritorio. Confírmalo con la CCC antes de subir nada.                │
+   │                                                                        │
+   │  Mientras tanto sustituyen Encode Sans Expanded y Source Sans 3, de    │
+   │  Google Fonts, ya declaradas más abajo.                                │
+   └────────────────────────────────────────────────────────────────────────┘
+
 @font-face{font-family:'Savior Sans Expanded';src:url('assets/fonts/SaviorSans-ExpandedLight.woff2') format('woff2');font-weight:300;font-display:swap;}
 @font-face{font-family:'Savior Sans Expanded';src:url('assets/fonts/SaviorSans-ExpandedBold.woff2') format('woff2');font-weight:700;font-display:swap;}
 @font-face{font-family:'Libertad';src:url('assets/fonts/Libertad-Regular.woff2') format('woff2');font-weight:400;font-display:swap;}
 @font-face{font-family:'Libertad';src:url('assets/fonts/Libertad-Bold.woff2') format('woff2');font-weight:700;font-display:swap;}
+*/
 
 :root{
   /* Paleta principal — Nexus Design System */
