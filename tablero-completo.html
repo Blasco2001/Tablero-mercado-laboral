@@ -925,8 +925,11 @@ V.resumen.pintar=()=>{
 
   const oc=S("general",FOCO,"ocupados")?.[iPer], de=S("general",FOCO,"desocupados")?.[iPer];
   const su=S("general",FOCO,"subocupados")?.[iPer];
+  /* "Subocupados" a secas: un subocupado ya es un ocupado por definición, y así
+     se llama la categoría en la GEIH. El mismo nombre alimenta la leyenda y el
+     tooltip del anillo. */
   const partes=[{nombre:"Ocupados plenos",v:(oc||0)-(su||0),color:"#253D90"},
-                {nombre:"Ocupados subocupados",v:su,color:"#6FBCFF"},
+                {nombre:"Subocupados",v:su,color:"#6FBCFF"},
                 {nombre:"Desocupados",v:de,color:"#F2661F"}].filter(x=>x.v!=null);
   anillo(document.getElementById("g-res-anillo"),{partes,etiquetaCentro:"personas en la|fuerza de trabajo"});
   document.getElementById("l-res-anillo").innerHTML=leyenda(partes.map(p=>({nombre:`${p.nombre} · ${pers(p.v)}`,color:p.color})));
