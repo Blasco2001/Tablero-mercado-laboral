@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+<html lang="es-CO">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Observatorio de mercado laboral · Cámara de Comercio de Cali</title>
+<meta name="description" content="Indicadores de mercado laboral de Cali A.M. con fuente en la Gran Encuesta Integrada de Hogares del DANE.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Encode+Sans+Expanded:wght@300;400;600;700&family=Archivo:wdth,wght@100..125,400..800&family=Source+Sans+3:ital,wght@0,300..700;1,300..700&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════════════════
+   TIPOGRAFÍA INSTITUCIONAL
+   Cuando tengas los archivos de fuente, ponlos en assets/fonts/ con
+   estos nombres y el tablero los toma automáticamente. Mientras tanto
+   cae en Archivo (ancha, sustituta de Savior Sans Expanded) y
+   Source Sans 3 (sustituta de Libertad).
+   ═══════════════════════════════════════════════════════════════════ */
+@font-face{font-family:'Savior Sans Expanded';src:url('assets/fonts/SaviorSans-ExpandedLight.woff2') format('woff2');font-weight:300;font-display:swap;}
+@font-face{font-family:'Savior Sans Expanded';src:url('assets/fonts/SaviorSans-ExpandedBold.woff2') format('woff2');font-weight:700;font-display:swap;}
+@font-face{font-family:'Libertad';src:url('assets/fonts/Libertad-Regular.woff2') format('woff2');font-weight:400;font-display:swap;}
+@font-face{font-family:'Libertad';src:url('assets/fonts/Libertad-Bold.woff2') format('woff2');font-weight:700;font-display:swap;}
+
+:root{
+  /* Paleta principal — Nexus Design System */
+  --azul-sereno:#12176B;  --azul-pacifico:#253D90;  --azul-farallones:#6FBCFF;
+  --blanco-maceta:#FAFAFA;
+  /* Paleta secundaria */
+  --violeta-guayacan:#5F27B5; --verde-feijo:#65D7B7; --chontaduro:#F2661F;
+  --verde-viche:#99DD3A;      --magenta-arrebol:#EF0074;
+
+  /* Escala UI azul */
+  --a50:#EEF7FF; --a100:#DAEDFF; --a200:#BDE0FF; --a300:#90CEFF; --a400:#70BDFF;
+  --a500:#3593FC; --a600:#1F74F1; --a700:#175DDE; --a800:#194BB4; --a900:#1A438E;
+  /* Escala UI magenta */
+  --m100:#FFE3F4; --m300:#FF98D4; --m500:#FF2799; --m700:#DF0064; --m900:#980344;
+  /* Escala UI chontaduro */
+  --c100:#FEEAD6; --c300:#FBD1AD; --c500:#F2661F; --c700:#BC3712; --c900:#792715;
+  /* Escala UI verde viche */
+  --v100:#EAFACD; --v300:#D5F5A1; --v500:#99DD3A; --v700:#5F9C14; --v900:#345017;
+  /* Escala UI violeta */
+  --g100:#EEEAFD; --g300:#C5B7FB; --g500:#8D60F2; --g700:#6E2DD4; --g900:#4D2092;
+  /* Escala UI feijó */
+  --f100:#D2F5E9; --f300:#A4EBD4; --f500:#41C0A0; --f700:#1D846E; --f900:#1A473E;
+
+  --tinta:#0E1235; --tinta-2:#4A5178; --tinta-3:#7C82A3;
+  --linea:#E4E8F2; --superficie:#FFFFFF;
+
+  --acento:var(--azul-pacifico);
+  --acento-suave:var(--a100);
+  --acento-fuerte:var(--azul-sereno);
+
+  /* Savior Sans Expanded es comercial (Sudtipos). Mientras llega el archivo
+     con licencia web, la sustituye Encode Sans Expanded: grotesca ancha, de
+     proporciones parecidas. Libertad (TipoType) la sustituye Source Sans 3. */
+  --display:'Savior Sans Expanded','Encode Sans Expanded','Archivo',system-ui,sans-serif;
+  --texto:'Libertad','Source Sans 3',system-ui,sans-serif;
+
+  --r-s:10px; --r-m:16px; --r-l:24px;
+  --sombra:0 1px 2px rgba(18,23,107,.05),0 8px 24px -12px rgba(18,23,107,.14);
+  --rail:238px;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{
+  font-family:var(--texto);background:var(--blanco-maceta);color:var(--tinta);
+  font-size:15px;line-height:1.5;font-variant-numeric:tabular-nums lining-nums;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,h4,.display{
+  font-family:var(--display);font-stretch:118%;font-weight:700;
+  letter-spacing:-.008em;line-height:1.12;font-style:normal;
+}
+/* El sistema pide nunca usar itálicas en la tipografía principal */
+h1,h2,h3,h4,.display,.kpi-v{font-synthesis:none}
+button,select,input{font:inherit;color:inherit}
+:focus-visible{outline:2.5px solid var(--azul-farallones);outline-offset:2px;border-radius:4px}
+
+/* ── Estructura ────────────────────────────────────────────────── */
+.app{display:grid;grid-template-columns:var(--rail) 1fr;min-height:100vh}
+
+/* ── Riel de navegación ────────────────────────────────────────── */
+.rail{
+  background:var(--azul-sereno);color:#fff;position:sticky;top:0;height:100vh;
+  display:flex;flex-direction:column;overflow-y:auto;
+}
+.rail-marca{padding:22px 20px 18px}
+.rail-logo{background:#fff;border-radius:var(--r-m);padding:13px 15px;display:block}
+.rail-logo img{width:100%;height:auto;display:block}
+.rail-sub{
+  font-family:var(--display);font-stretch:112%;font-weight:300;font-size:11.5px;
+  letter-spacing:.055em;text-transform:none;color:var(--azul-farallones);
+  margin-top:13px;line-height:1.35;
+}
+.rail nav{padding:6px 12px 20px;display:flex;flex-direction:column;gap:2px}
+.rail-titulo{
+  font-size:10.5px;letter-spacing:.13em;color:#7d86c9;padding:16px 10px 7px;
+  font-weight:700;text-transform:uppercase;
+}
+.nav-b{
+  display:flex;align-items:center;gap:11px;width:100%;text-align:left;
+  background:none;border:0;color:#C8D2F5;padding:10px 11px;border-radius:var(--r-s);
+  cursor:pointer;font-size:14.5px;transition:background .15s,color .15s;
+}
+.nav-b:hover{background:rgba(255,255,255,.09);color:#fff}
+.nav-b[aria-current="true"]{background:#fff;color:var(--azul-sereno);font-weight:700}
+.nav-arco{width:17px;height:17px;flex:0 0 17px}
+.rail-pie{
+  margin-top:auto;padding:18px 20px 22px;font-size:11.5px;color:#8b93cf;
+  border-top:1px solid rgba(255,255,255,.13);line-height:1.55;
+}
+
+/* ── Barra de filtros ──────────────────────────────────────────── */
+.barra{
+  position:sticky;top:0;z-index:40;background:rgba(250,250,250,.93);
+  backdrop-filter:blur(10px);border-bottom:1px solid var(--linea);
+  padding:13px 26px;display:flex;gap:20px;align-items:flex-end;flex-wrap:wrap;
+}
+.campo{display:flex;flex-direction:column;gap:5px;min-width:0}
+.campo>label{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--tinta-3);font-weight:700}
+.seg{display:inline-flex;background:var(--a50);border:1px solid var(--linea);border-radius:999px;padding:3px}
+.seg button{
+  border:0;background:none;padding:6px 15px;border-radius:999px;cursor:pointer;
+  font-size:13.5px;color:var(--tinta-2);white-space:nowrap;transition:.15s;
+}
+.seg button[aria-pressed="true"]{background:var(--azul-pacifico);color:#fff;font-weight:700}
+select,.chip-add{
+  background:var(--superficie);border:1px solid var(--linea);border-radius:var(--r-s);
+  padding:7px 11px;font-size:14px;cursor:pointer;max-width:280px;
+}
+.barra-fin{margin-left:auto;display:flex;gap:9px;align-items:center}
+.btn{
+  border:1px solid var(--linea);background:var(--superficie);border-radius:var(--r-s);
+  padding:8px 14px;cursor:pointer;font-size:13.5px;display:inline-flex;gap:7px;align-items:center;
+  transition:.15s;
+}
+.btn:hover{border-color:var(--azul-farallones);background:var(--a50)}
+.btn-p{background:var(--azul-pacifico);color:#fff;border-color:var(--azul-pacifico)}
+.btn-p:hover{background:var(--azul-sereno);border-color:var(--azul-sereno)}
+
+/* ── Ciudades comparadas ───────────────────────────────────────── */
+.chips{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.chip{
+  display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 7px 5px 11px;
+  font-size:13px;border:1px solid var(--linea);background:var(--superficie);
+}
+.chip .pt{width:9px;height:9px;border-radius:999px;flex:0 0 9px}
+.chip button{border:0;background:none;cursor:pointer;color:var(--tinta-3);font-size:15px;line-height:1;padding:0 2px}
+.chip button:hover{color:var(--m700)}
+.chip.foco{background:var(--azul-sereno);color:#fff;border-color:var(--azul-sereno);font-weight:700}
+
+/* ── Contenido ─────────────────────────────────────────────────── */
+main{padding:26px 26px 60px}
+.seccion[hidden]{display:none}
+.cab{display:flex;gap:15px;align-items:flex-start;margin-bottom:20px}
+.cab-arcos{flex:0 0 46px;margin-top:2px}
+.cab h2{font-size:26px;margin-bottom:3px}
+.cab p{color:var(--tinta-2);font-size:14.5px;max-width:74ch}
+
+/* ── Tarjetas KPI ──────────────────────────────────────────────── */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:13px;margin-bottom:20px}
+.kpi{
+  background:var(--superficie);border:1px solid var(--linea);border-radius:var(--r-m);
+  padding:16px 17px 14px;box-shadow:var(--sombra);position:relative;overflow:hidden;
+}
+.kpi::after{
+  content:"";position:absolute;right:-30px;bottom:-34px;width:82px;height:82px;z-index:0;
+  border-radius:999px;border:12px solid var(--acento-suave);opacity:.55;
+  clip-path:polygon(0 0,100% 0,100% 100%,50% 100%);
+}
+.kpi>*{position:relative;z-index:1}
+.kpi-t{font-size:12.5px;color:var(--tinta-2);font-weight:700;letter-spacing:.02em;margin-bottom:7px;position:relative}
+.kpi-v{font-family:var(--display);font-stretch:118%;font-size:33px;font-weight:700;letter-spacing:-.018em;line-height:1;position:relative}
+.kpi-u{font-size:15px;font-weight:300;color:var(--tinta-2);margin-left:2px}
+.kpi-d{display:flex;align-items:baseline;gap:6px;margin-top:9px;font-size:12.5px;position:relative}
+.var{font-weight:700;border-radius:999px;padding:2px 8px;font-size:12px;white-space:nowrap}
+.var.sube{background:var(--c100);color:var(--c900)}
+.var.baja{background:var(--f100);color:var(--f900)}
+.var.plana{background:var(--a50);color:var(--a900)}
+.var.neutra{background:var(--a50);color:var(--a900)}
+.kpi-n{color:var(--tinta-3)}
+
+/* ── Paneles / gráficas ────────────────────────────────────────── */
+.grid{display:grid;gap:13px;margin-bottom:13px;align-items:start}
+.g-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g-23{grid-template-columns:minmax(0,1.62fr) minmax(0,1fr)}
+.panel{
+  background:var(--superficie);border:1px solid var(--linea);border-radius:var(--r-m);
+  padding:17px 18px 13px;box-shadow:var(--sombra);min-width:0;
+}
+.panel-cab{display:flex;justify-content:space-between;align-items:flex-start;gap:13px;margin-bottom:3px}
+.panel h3{font-size:16px;margin-bottom:2px}
+.panel .sub{font-size:12.5px;color:var(--tinta-3);margin-bottom:9px}
+.mini-seg{display:inline-flex;gap:3px;background:var(--a50);border-radius:999px;padding:3px;flex:0 0 auto}
+.mini-seg button{border:0;background:none;border-radius:999px;padding:4px 11px;font-size:12px;cursor:pointer;color:var(--tinta-2)}
+.mini-seg button[aria-pressed="true"]{background:var(--superficie);color:var(--azul-sereno);font-weight:700;box-shadow:0 1px 3px rgba(18,23,107,.12)}
+.leyenda{display:flex;flex-wrap:wrap;gap:11px;margin-top:9px;font-size:12.5px;color:var(--tinta-2)}
+.leyenda span{display:inline-flex;align-items:center;gap:6px}
+.leyenda i{width:16px;height:3.5px;border-radius:999px;display:inline-block}
+.nota{font-size:11.5px;color:var(--tinta-3);margin-top:9px;line-height:1.5}
+svg.gr{display:block;width:100%;height:auto;overflow:visible}
+.gr text{font-family:var(--texto);font-variant-numeric:tabular-nums}
+
+/* ── Tabla ─────────────────────────────────────────────────────── */
+.tabla-env{overflow-x:auto;margin-top:4px}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th,td{padding:8px 11px;text-align:right;border-bottom:1px solid var(--linea);white-space:nowrap}
+th:first-child,td:first-child{text-align:left;position:sticky;left:0;background:var(--superficie)}
+thead th{font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--tinta-3);border-bottom:1.5px solid var(--linea)}
+tbody tr:hover td{background:var(--a50)}
+tbody tr.foco td{background:var(--a50);font-weight:700}
+tbody tr.foco td:first-child{background:var(--a100)}
+
+/* ── Tooltip ───────────────────────────────────────────────────── */
+#tip{
+  position:fixed;pointer-events:none;z-index:99;background:var(--azul-sereno);color:#fff;
+  border-radius:var(--r-s);padding:9px 12px;font-size:12.5px;line-height:1.55;
+  box-shadow:0 12px 32px -8px rgba(18,23,107,.5);opacity:0;transition:opacity .1s;max-width:260px;
+}
+#tip.on{opacity:1}
+#tip b{font-family:var(--display);font-stretch:112%;display:block;margin-bottom:4px;font-size:12px;color:var(--azul-farallones)}
+#tip .r{display:flex;justify-content:space-between;gap:14px}
+#tip .r i{width:8px;height:8px;border-radius:999px;display:inline-block;margin-right:6px}
+
+/* ── Carga ─────────────────────────────────────────────────────── */
+#carga{position:fixed;inset:0;background:var(--blanco-maceta);display:grid;place-items:center;z-index:200}
+#carga .txt{text-align:center;color:var(--tinta-2);font-size:14px;margin-top:18px}
+.spin{animation:giro 1.5s cubic-bezier(.5,0,.5,1) infinite;transform-origin:50% 50%}
+@keyframes giro{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+/* ── Responsivo ────────────────────────────────────────────────── */
+@media (max-width:1180px){.g-3{grid-template-columns:repeat(2,minmax(0,1fr))}.g-23{grid-template-columns:1fr}}
+@media (max-width:900px){
+  .app{grid-template-columns:1fr}
+  .rail{position:static;height:auto;flex-direction:column}
+  .rail-marca{display:flex;align-items:center;gap:13px;padding:13px 14px 10px}
+  .rail-logo{flex:0 0 148px;padding:8px 10px}
+  .rail-sub{margin-top:0;font-size:12px}
+  .rail nav{flex-direction:row;overflow-x:auto;padding:4px 12px 14px}
+  .rail-titulo{display:none}.rail-pie{display:none}
+  .nav-b{white-space:nowrap}
+  .g-2,.g-3{grid-template-columns:1fr}
+  main{padding:18px 14px 50px}
+  /* En una pantalla pequeña una barra de filtros fija se come media vista */
+  .barra{padding:12px 14px;position:static}
+}
+@media print{.rail,.barra{display:none}.app{grid-template-columns:1fr}.panel{break-inside:avoid}}
+</style>
+</head>
+<body>
+
+<div id="carga">
+  <div>
+    <svg width="76" height="76" viewBox="0 0 76 76" aria-hidden="true">
+      <g class="spin">
+        <path d="M38 8 A30 30 0 0 1 68 38" fill="none" stroke="#EF0074" stroke-width="9" stroke-linecap="round"/>
+        <path d="M68 38 A30 30 0 0 1 38 68" fill="none" stroke="#253D90" stroke-width="9" stroke-linecap="round"/>
+        <path d="M38 68 A30 30 0 0 1 8 38" fill="none" stroke="#65D7B7" stroke-width="9" stroke-linecap="round"/>
+      </g>
+    </svg>
+    <p class="txt">Cargando los datos del DANE…</p>
+  </div>
+</div>
+
+<div class="app" id="app" style="visibility:hidden">
+
+  <!-- ══ Riel ══════════════════════════════════════════════════ -->
+  <aside class="rail">
+    <div class="rail-marca">
+      <span class="rail-logo"><img src="assets/LogoCCCPrincipal.jpg" alt="Cámara de Comercio de Cali"></span>
+      <p class="rail-sub">Observatorio de<br>mercado laboral</p>
+    </div>
+    <nav id="nav" aria-label="Secciones del tablero"></nav>
+    <div class="rail-pie">
+      Fuente: DANE — Gran Encuesta<br>Integrada de Hogares (GEIH).<br>
+      <span id="pie-act"></span>
+    </div>
+  </aside>
+
+  <div>
+    <!-- ══ Filtros ═════════════════════════════════════════════ -->
+    <div class="barra">
+      <div class="campo">
+        <label id="lbl-modo">Agregación temporal</label>
+        <div class="seg" role="group" aria-labelledby="lbl-modo">
+          <button data-modo="tm" aria-pressed="true">Trimestre móvil</button>
+          <button data-modo="an" aria-pressed="false">Promedio anual</button>
+        </div>
+      </div>
+      <div class="campo">
+        <label for="sel-per">Período</label>
+        <select id="sel-per"></select>
+      </div>
+      <div class="campo">
+        <label for="sel-desde">Serie desde</label>
+        <select id="sel-desde"></select>
+      </div>
+      <div class="campo" style="flex:1 1 300px">
+        <label id="lbl-cmp">Comparar con</label>
+        <div class="chips" id="chips" aria-labelledby="lbl-cmp">
+          <select class="chip-add" id="sel-ciudad" aria-label="Agregar ciudad a la comparación"></select>
+        </div>
+      </div>
+      <div class="barra-fin">
+        <button class="btn" id="btn-csv">Descargar datos</button>
+        <button class="btn btn-p" id="btn-print">Exportar PDF</button>
+      </div>
+    </div>
+
+    <main id="main"></main>
+  </div>
+</div>
+
+<div id="tip" role="status" aria-live="polite"></div>
+
+<script>
+"use strict";
+/* ═══════════════════════════════════════════════════════════════════
+   Observatorio de mercado laboral · Cámara de Comercio de Cali
+   Gráficas en SVG puro: sin dependencias, sin CDN, sin build.
+   Reglas de marca aplicadas: extremos redondeados, gradaciones sólo
+   verticales (90°) con el tono oscuro en la base, datos ordenados por
+   tamaño, color temático como acento (~5% de la composición).
+   ═══════════════════════════════════════════════════════════════════ */
+
+const FOCO = "Cali A.M.";
+
+/* ── Momentos cromáticos por sección (brandbook: colores por temática) */
+const SECCIONES = [
+  {id:"resumen",   nom:"Resumen",             tema:"azul",       desc:"Los números que definen hoy el mercado laboral de Cali A.M."},
+  {id:"panorama",  nom:"Panorama general",    tema:"feijo",      desc:"Ocupación, desempleo y participación desde 2007."},
+  {id:"genero",    nom:"Brechas de género",   tema:"magenta",    desc:"Cómo se reparten el empleo y la participación entre hombres y mujeres."},
+  {id:"informal",  nom:"Informalidad",        tema:"chontaduro", desc:"Proporción y composición del empleo informal desde 2021."},
+  {id:"juventud",  nom:"Juventud",            tema:"violeta",    desc:"Mercado laboral de las personas entre 15 y 28 años."},
+  {id:"ciudades",  nom:"Comparativo ciudades",tema:"viche",      desc:"Cali frente a las demás capitales del país."},
+  {id:"datos",     nom:"Datos y método",      tema:"azul",       desc:"De dónde sale cada cifra y cómo se actualiza el tablero."},
+];
+
+const TEMAS = {
+  azul:      {c:"#253D90", suave:"#DAEDFF", fuerte:"#12176B"},
+  feijo:     {c:"#1D846E", suave:"#D2F5E9", fuerte:"#1A473E"},
+  magenta:   {c:"#DF0064", suave:"#FFE3F4", fuerte:"#980344"},
+  chontaduro:{c:"#E34B13", suave:"#FEEAD6", fuerte:"#792715"},
+  violeta:   {c:"#6E2DD4", suave:"#EEEAFD", fuerte:"#4D2092"},
+  viche:     {c:"#5F9C14", suave:"#EAFACD", fuerte:"#345017"},
+};
+
+/* Serie de color para comparar ciudades. Cali siempre azul sereno. */
+const PALETA = ["#12176B","#3593FC","#F2661F","#8D60F2","#41C0A0","#FF2799","#99DD3A","#175DDE"];
+
+const ETQ = {
+  td:"Tasa de desempleo", to:"Tasa de ocupación", tgp:"Tasa global de participación",
+  ts:"Tasa de subocupación", pct_pet:"% en edad de trabajar",
+  ocupados:"Ocupados", desocupados:"Desocupados", ft:"Fuerza de trabajo",
+  pet:"Población en edad de trabajar", pob_total:"Población total",
+  ffft:"Fuera de la fuerza de trabajo", subocupados:"Subocupados",
+  prop_informalidad:"Proporción de informalidad", formal:"Ocupados formales",
+  informal:"Ocupados informales", pct_ffft:"% fuera de la fuerza de trabajo",
+  pet_joven:"Jóvenes en edad de trabajar",
+};
+const SIGLAS = {td:"TD", to:"TO", tgp:"TGP", ts:"TS", prop_informalidad:"Informalidad"};
+const ES_TASA = k => ["td","to","tgp","ts","pct_pet","prop_informalidad","pct_ffft"].includes(k);
+/* Indicadores donde subir es mala noticia */
+const SUBIR_ES_MALO = ["td","ts","prop_informalidad","desocupados","informal","pct_ffft"];
+
+const ANUAL = () => modo==="an";
+let D=null, modo="tm", iPer=0, desdeAnio=2007, comparar=["Total 13 ciudades y A.M.","Bogota D.C.","Medellin A.M."], activa="resumen";
+
+/* ═══ Utilidades ═══════════════════════════════════════════════ */
+const fmt1 = n => n==null?"—":n.toLocaleString("es-CO",{minimumFractionDigits:1,maximumFractionDigits:1});
+const fmt2 = n => n==null?"—":n.toLocaleString("es-CO",{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmt0 = n => n==null?"—":Math.round(n).toLocaleString("es-CO");
+const pers = n => n==null?"—":Math.round(n*1000).toLocaleString("es-CO");
+const corto = n => { if(n==null)return"—"; const a=Math.abs(n);
+  if(a>=1000) return (n/1000).toLocaleString("es-CO",{maximumFractionDigits:1})+" M";
+  return n.toLocaleString("es-CO",{maximumFractionDigits:0})+"k"; };
+const valor = (k,n) => ES_TASA(k) ? fmt1(n)+"%" : pers(n);
+const P = () => D.periodos[modo];
+const MES3=["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+/* Eje temporal: "Jun 26" en trimestre móvil, "2026" en promedio anual */
+function etqCorta(i){ const c=P().codigos[i]; if(!c) return "";
+  if(ANUAL()) return c;
+  const [a,m]=c.split("-"); return MES3[+m-1]+" "+a.slice(2); }
+/* Un año en curso no se puede leer como uno completo */
+const esParcial = i => ANUAL() && (P().trimestres||[])[i]<4;
+const S = (mod,ciudad,k) => (D.series[modo]?.[mod]?.[ciudad]?.[k]) || null;
+const NOM = c => (D&&D.nombres&&D.nombres[c])||c;
+const esc = s => String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+/* El comparable de hace un año: 12 trimestres móviles atrás, o el año previo */
+const iAnterior = () => Math.max(0, iPer - (ANUAL()?1:12));
+/* Rango visible de la serie según "desde" */
+function rango(){
+  const a=P().anios; let i0=a.findIndex(y=>y>=desdeAnio);
+  if(i0<0) i0=0;
+  return [i0, iPer];
+}
+function colorCiudad(c){ return c===FOCO ? "#12176B" : PALETA[(comparar.indexOf(c)+1)%PALETA.length]; }
+function tema(){ return TEMAS[(SECCIONES.find(s=>s.id===activa)||{}).tema||"azul"]; }
+
+/* ═══ Motor de gráficas SVG ════════════════════════════════════ */
+const NS="http://www.w3.org/2000/svg";
+const tip=document.getElementById("tip");
+function verTip(html,ev){ tip.innerHTML=html; tip.classList.add("on");
+  const r=tip.getBoundingClientRect();
+  let x=ev.clientX+15, y=ev.clientY-r.height-12;
+  if(x+r.width>innerWidth-10) x=ev.clientX-r.width-15;
+  if(y<10) y=ev.clientY+18;
+  tip.style.left=x+"px"; tip.style.top=y+"px"; }
+function ocultarTip(){ tip.classList.remove("on"); }
+document.addEventListener("scroll",ocultarTip,true);
+
+function el(t,a={},hijos=[]){ const n=document.createElementNS(NS,t);
+  for(const k in a) if(a[k]!=null) n.setAttribute(k,a[k]);
+  hijos.forEach(h=>n.appendChild(h)); return n; }
+
+function escalaBonita(min,max,n=5){
+  if(min===max){min-=1;max+=1;}
+  const bruto=(max-min)/n, mag=Math.pow(10,Math.floor(Math.log10(bruto)));
+  const paso=[1,2,2.5,5,10].find(m=>m*mag>=bruto)*mag;
+  const lo=Math.floor(min/paso)*paso, hi=Math.ceil(max/paso)*paso;
+  const t=[]; for(let v=lo;v<=hi+paso/2;v+=paso) t.push(+v.toFixed(6));
+  return {lo,hi,ticks:t};
+}
+
+/* ── Gráfica de líneas (serie de tiempo) ──────────────────────── */
+function lineas(cont,{series,etiquetas,cortas,unidad="%",marcarUltimo=true,area=false,alto=272,invertirY=false}){
+  cortas=cortas||etiquetas;
+  cont.innerHTML="";
+  const W=Math.max(300,Math.round(cont.clientWidth||760)),H=alto,ml=54,mr=14,mt=14,mb=34;
+  const vivos=series.filter(s=>s.datos.some(v=>v!=null));
+  if(!vivos.length){ cont.innerHTML='<p class="nota">Sin datos para el período seleccionado.</p>'; return; }
+  const todos=vivos.flatMap(s=>s.datos).filter(v=>v!=null);
+  const {lo,hi,ticks}=escalaBonita(Math.min(...todos),Math.max(...todos));
+  const n=etiquetas.length;
+  const X=i=>ml+(n<2?0:i*(W-ml-mr)/(n-1));
+  const Y=v=>invertirY ? mt+(H-mt-mb)*((v-lo)/(hi-lo||1))
+                       : mt+(H-mt-mb)*(1-(v-lo)/(hi-lo||1));
+  const svg=el("svg",{class:"gr",viewBox:`0 0 ${W} ${H}`,role:"img"});
+  svg.style.height=alto+"px";
+
+  const defs=el("defs");
+  vivos.forEach((s,k)=>{ /* Gradación vertical 90°, tono oscuro en la base */
+    const g=el("linearGradient",{id:"gr"+k+"-"+Math.random().toString(36).slice(2,7),x1:"0",y1:"1",x2:"0",y2:"0"});
+    g.appendChild(el("stop",{offset:"0%","stop-color":s.color,"stop-opacity":".26"}));
+    g.appendChild(el("stop",{offset:"100%","stop-color":s.color,"stop-opacity":"0"}));
+    s._g=g.getAttribute("id"); defs.appendChild(g);
+  });
+  svg.appendChild(defs);
+
+  ticks.forEach(t=>{
+    svg.appendChild(el("line",{x1:ml,x2:W-mr,y1:Y(t),y2:Y(t),stroke:"#E4E8F2","stroke-width":1}));
+    const tx=el("text",{x:ml-9,y:Y(t)+4,"text-anchor":"end","font-size":11,fill:"#7C82A3"});
+    tx.textContent=unidad==="%"?fmt1(t).replace(",0",""):(unidad==="puesto"?fmt0(t):corto(t));
+    svg.appendChild(tx);
+  });
+
+  /* El ancho real del panel manda cuántas marcas caben sin encimarse */
+  const cabe=Math.max(3,Math.floor(W/78));
+  const paso=Math.max(1,Math.ceil(n/cabe));
+  for(let i=n-1;i>=0;i-=paso){
+    const tx=el("text",{x:X(i),y:H-12,"text-anchor":"middle","font-size":11,fill:"#7C82A3"});
+    tx.textContent=cortas[i]; svg.appendChild(tx);
+  }
+
+  vivos.forEach(s=>{
+    /* Un dato faltante se dibuja como hueco. Unir los extremos con una recta
+       inventaría una trayectoria que nunca se midió: es justo lo que pasa con
+       la subocupación entre marzo y septiembre de 2020. */
+    const tramos=[]; let actual=[];
+    s.datos.forEach((v,i)=>{
+      if(v==null){ if(actual.length) tramos.push(actual); actual=[]; }
+      else actual.push([X(i),Y(v)]);
+    });
+    if(actual.length) tramos.push(actual);
+    if(!tramos.length) return;
+
+    tramos.forEach(pts=>{
+      if(area && pts.length>1){
+        const d="M"+pts.map(p=>p.join(",")).join("L")+`L${pts.at(-1)[0]},${Y(lo)}L${pts[0][0]},${Y(lo)}Z`;
+        svg.appendChild(el("path",{d,fill:`url(#${s._g})`}));
+      }
+      if(pts.length===1){
+        svg.appendChild(el("circle",{cx:pts[0][0],cy:pts[0][1],r:2.8,fill:s.color}));
+      } else {
+        svg.appendChild(el("path",{d:"M"+pts.map(p=>p.join(",")).join("L"),fill:"none",
+          stroke:s.color,"stroke-width":s.grueso||2.6,"stroke-linecap":"round","stroke-linejoin":"round",
+          "stroke-dasharray":s.punteada?"2 6":null}));
+      }
+    });
+    if(marcarUltimo){
+      const u=tramos.at(-1).at(-1);
+      svg.appendChild(el("circle",{cx:u[0],cy:u[1],r:4.5,fill:"#fff",stroke:s.color,"stroke-width":2.6}));
+    }
+  });
+
+  const guia=el("line",{x1:0,x2:0,y1:mt,y2:H-mb,stroke:"#12176B","stroke-width":1,opacity:0});
+  svg.appendChild(guia);
+  const capa=el("rect",{x:ml,y:mt,width:W-ml-mr,height:H-mt-mb,fill:"transparent",style:"cursor:crosshair"});
+  svg.appendChild(capa);
+  capa.addEventListener("pointermove",e=>{
+    const b=svg.getBoundingClientRect();
+    const px=(e.clientX-b.left)/b.width*W;
+    const i=Math.max(0,Math.min(n-1,Math.round((px-ml)/((W-ml-mr)/(n-1||1)))));
+    guia.setAttribute("x1",X(i)); guia.setAttribute("x2",X(i)); guia.setAttribute("opacity",".28");
+    const filas=vivos.map(s=>`<div class="r"><span><i style="background:${s.color}"></i>${esc(NOM(s.nombre))}</span><b style="color:#fff;font-family:inherit;display:inline;font-size:12.5px">${s.datos[i]==null?"—":(unidad==="%"?fmt1(s.datos[i])+"%":(unidad==="puesto"?"#"+fmt0(s.datos[i]):pers(s.datos[i])))}</b></div>`).join("");
+    verTip(`<b>${esc(etiquetas[i])}</b>${filas}`,e);
+  });
+  capa.addEventListener("pointerleave",()=>{guia.setAttribute("opacity",0);ocultarTip();});
+  cont.appendChild(svg);
+}
+
+/* ── Barras horizontales ordenadas por tamaño ─────────────────── */
+function barras(cont,{items,unidad="%",alto=null,resaltar=FOCO,color="#3593FC"}){
+  cont.innerHTML="";
+  const vivos=items.filter(d=>d.v!=null).sort((a,b)=>b.v-a.v);
+  if(!vivos.length){ cont.innerHTML='<p class="nota">Sin datos disponibles.</p>'; return; }
+  const fila=27, W=Math.max(320,Math.round(cont.clientWidth||760)), ml=Math.min(230,Math.max(...vivos.map(d=>d.nombre.length))*7.4+14), mr=64;
+  const hayNeg=vivos.some(d=>d.v<0);
+  const H=alto||vivos.length*fila+12;
+  /* Con valores negativos (brechas) la barra crece a ambos lados del cero */
+  const max=Math.max(...vivos.map(d=>d.v)), min=Math.min(0,...vivos.map(d=>d.v));
+  const util=W-ml-mr-(hayNeg?46:0), esc0=v=>util*(v-min)/((max-min)||1), x0=ml+esc0(0);
+  const svg=el("svg",{class:"gr",viewBox:`0 0 ${W} ${H}`,role:"img"});
+  svg.style.height=H+"px";
+  if(min<0) svg.appendChild(el("line",{x1:x0,x2:x0,y1:2,y2:H-4,stroke:"#E4E8F2","stroke-width":1}));
+  vivos.forEach((d,i)=>{
+    const y=i*fila+7, h=13.5;
+    const esFoco=d.nombre===resaltar;
+    const c=d.color||(esFoco?"#12176B":color);
+    const g=el("g",{style:"cursor:default"});
+    const tn=el("text",{x:ml-10,y:y+h/2+4,"text-anchor":"end","font-size":12.5,
+      fill:esFoco?"#12176B":"#4A5178","font-weight":esFoco?700:400});
+    tn.textContent=NOM(d.nombre); g.appendChild(tn);
+    const xa=ml+(hayNeg?46:0)+esc0(d.v), ancho=Math.max(3,Math.abs(xa-x0));
+    const xIni=d.v<0?x0-ancho:x0;
+    g.appendChild(el("rect",{x:xIni,y,width:ancho,height:h,rx:h/2,fill:c}));
+    const tv=el("text",{x:d.v<0?xIni-9:xIni+ancho+9,y:y+h/2+4,"font-size":12.5,
+      "text-anchor":d.v<0?"end":"start",
+      fill:esFoco?"#12176B":"#4A5178","font-weight":esFoco?700:400});
+    tv.textContent=unidad==="%"?fmt1(d.v)+"%":corto(d.v); g.appendChild(tv);
+    g.addEventListener("pointermove",e=>verTip(`<b>${esc(NOM(d.nombre))}</b>${unidad==="%"?fmt2(d.v)+"%":pers(d.v)+" personas"}`,e));
+    g.addEventListener("pointerleave",ocultarTip);
+    svg.appendChild(g);
+  });
+  cont.appendChild(svg);
+}
+
+/* ── Barras apiladas (composición) ────────────────────────────── */
+function apiladas(cont,{etiquetas,capas,alto=250}){
+  cont.innerHTML="";
+  const W=Math.max(300,Math.round(cont.clientWidth||760)),H=alto,ml=52,mr=14,mt=12,mb=32;
+  const n=etiquetas.length;
+  const tot=etiquetas.map((_,i)=>capas.reduce((s,c)=>s+(c.datos[i]||0),0));
+  const max=Math.max(...tot)||1;
+  const {hi,ticks}=escalaBonita(0,max);
+  const Y=v=>mt+(H-mt-mb)*(1-v/hi);
+  const bw=Math.max(3,(W-ml-mr)/n*0.72);
+  const X=i=>ml+(i+0.5)*((W-ml-mr)/n);
+  const svg=el("svg",{class:"gr",viewBox:`0 0 ${W} ${H}`,role:"img"}); svg.style.height=H+"px";
+  ticks.forEach(t=>{
+    svg.appendChild(el("line",{x1:ml,x2:W-mr,y1:Y(t),y2:Y(t),stroke:"#E4E8F2"}));
+    const tx=el("text",{x:ml-9,y:Y(t)+4,"text-anchor":"end","font-size":11,fill:"#7C82A3"});
+    tx.textContent=corto(t); svg.appendChild(tx);
+  });
+  etiquetas.forEach((e,i)=>{
+    let acum=0;
+    const g=el("g");
+    capas.forEach((c,k)=>{
+      const v=c.datos[i]; if(v==null) return;
+      const y0=Y(acum+v), y1=Y(acum);
+      const ultima=k===capas.length-1;
+      g.appendChild(el("rect",{x:X(i)-bw/2,y:y0,width:bw,height:Math.max(1,y1-y0),
+        rx:ultima?Math.min(5,bw/2):0,fill:c.color}));
+      acum+=v;
+    });
+    g.addEventListener("pointermove",ev=>{
+      const filas=capas.map(c=>`<div class="r"><span><i style="background:${c.color}"></i>${esc(c.nombre)}</span><span>${pers(c.datos[i])}</span></div>`).join("");
+      verTip(`<b>${esc(e)}</b>${filas}`,ev);
+    });
+    g.addEventListener("pointerleave",ocultarTip);
+    svg.appendChild(g);
+  });
+  const paso=Math.max(1,Math.ceil(n/8));
+  for(let i=0;i<n;i+=paso){
+    const tx=el("text",{x:X(i),y:H-11,"text-anchor":"middle","font-size":11,fill:"#7C82A3"});
+    tx.textContent=etiquetas[i]; svg.appendChild(tx);
+  }
+  cont.appendChild(svg);
+}
+
+/* ── Anillo de composición (morfología de aros del sistema) ───── */
+function anillo(cont,{partes,alto=228,etiquetaCentro="personas"}){
+  cont.innerHTML="";
+  const S=alto,R=alto/2-8,r=R*0.6,cx=S/2,cy=S/2;
+  const tot=partes.reduce((s,p)=>s+(p.v||0),0)||1;
+  const svg=el("svg",{class:"gr",viewBox:`0 0 ${S} ${S}`,role:"img"}); svg.style.height=alto+"px";
+  let a0=-Math.PI/2;
+  partes.forEach(p=>{
+    const a1=a0+(p.v/tot)*Math.PI*2;
+    const g=(a1-a0)>Math.PI?1:0;
+    const d=[`M${cx+R*Math.cos(a0)},${cy+R*Math.sin(a0)}`,
+             `A${R},${R} 0 ${g} 1 ${cx+R*Math.cos(a1)},${cy+R*Math.sin(a1)}`,
+             `L${cx+r*Math.cos(a1)},${cy+r*Math.sin(a1)}`,
+             `A${r},${r} 0 ${g} 0 ${cx+r*Math.cos(a0)},${cy+r*Math.sin(a0)}`,"Z"].join("");
+    const path=el("path",{d,fill:p.color,stroke:"#fff","stroke-width":2.5});
+    path.addEventListener("pointermove",e=>verTip(`<b>${esc(p.nombre)}</b>${pers(p.v)} personas · ${fmt1(p.v/tot*100)}%`,e));
+    path.addEventListener("pointerleave",ocultarTip);
+    svg.appendChild(path); a0=a1;
+  });
+  const t1=el("text",{x:cx,y:cy-2,"text-anchor":"middle","font-size":25,"font-weight":700,fill:"#12176B",
+    style:"font-family:var(--display);font-stretch:118%"});
+  t1.textContent=corto(tot); svg.appendChild(t1);
+  etiquetaCentro.split("|").forEach((ln,k)=>{
+    const t2=el("text",{x:cx,y:cy+17+k*13,"text-anchor":"middle","font-size":10.5,fill:"#7C82A3"});
+    t2.textContent=ln; svg.appendChild(t2);
+  });
+  cont.appendChild(svg);
+}
+
+/* ── Cascada de la población ───────────────────────────────────
+   Un desocupado son 114 mil frente a 1,9 millones en edad de trabajar:
+   en una barra común desaparece. Aquí cada nivel se reparte sobre el
+   ancho del nivel anterior, así se lee la proporción de verdad.        */
+function cascada(cont,{niveles,alto=null}){
+  cont.innerHTML="";
+  const W=Math.max(300,Math.round(cont.clientWidth||420));
+  const fh=34, gap=13, H=alto||niveles.length*(fh+gap)+8;
+  const svg=el("svg",{class:"gr",viewBox:`0 0 ${W} ${H}`,role:"img"}); svg.style.height=H+"px";
+  niveles.forEach((niv,i)=>{
+    const y=i*(fh+gap)+4;
+    const base=niv.base||niveles[0].partes.reduce((a,p)=>a+p.v,0);
+    const x0=(niv.desplaza||0)/base*W;
+    let x=x0;
+    niv.partes.forEach(pt=>{
+      const w=Math.max(2,pt.v/base*W);
+      const g=el("g");
+      g.appendChild(el("rect",{x,y,width:w,height:fh,rx:Math.min(9,w/2),fill:pt.color}));
+      if(w>96){                       /* cabe adentro */
+        const t1=el("text",{x:x+11,y:y+15,"font-size":11.5,fill:pt.claro?"#12176B":"#fff","font-weight":700});
+        t1.textContent=pt.nombre; g.appendChild(t1);
+        const t2=el("text",{x:x+11,y:y+28,"font-size":11.5,fill:pt.claro?"#4A5178":"rgba(255,255,255,.85)"});
+        t2.textContent=pers(pt.v); g.appendChild(t2);
+      } else {                          /* muy angosto: se rotula al lado */
+        const t1=el("text",{x:x+w+9,y:y+15,"font-size":11.5,fill:"#12176B","font-weight":700});
+        t1.textContent=pt.nombre; g.appendChild(t1);
+        const t2=el("text",{x:x+w+9,y:y+28,"font-size":11.5,fill:"#4A5178"});
+        t2.textContent=pers(pt.v); g.appendChild(t2);
+      }
+      g.addEventListener("pointermove",e=>verTip(
+        `<b>${esc(pt.nombre)}</b>${pers(pt.v)} personas · ${fmt1(pt.v/base*100)}% de la población en edad de trabajar`,e));
+      g.addEventListener("pointerleave",ocultarTip);
+      svg.appendChild(g); x+=w;
+    });
+  });
+  cont.appendChild(svg);
+}
+
+/* ── Morfología: composición de 3 arcos (marca de sección) ────── */
+function arcos(color,tam=46,op=[1,.62,.34]){
+  const R=tam/2-3, w=tam*0.19, c=tam/2;
+  const arco=(a0,a1,o)=>{
+    const p=(a)=>[c+(R-w/2)*Math.cos(a*Math.PI/180),c+(R-w/2)*Math.sin(a*Math.PI/180)];
+    const [x0,y0]=p(a0),[x1,y1]=p(a1);
+    return `<path d="M${x0.toFixed(2)},${y0.toFixed(2)} A${(R-w/2).toFixed(2)},${(R-w/2).toFixed(2)} 0 0 1 ${x1.toFixed(2)},${y1.toFixed(2)}" fill="none" stroke="${color}" stroke-width="${w.toFixed(2)}" stroke-linecap="round" opacity="${o}"/>`;
+  };
+  return `<svg viewBox="0 0 ${tam} ${tam}" width="${tam}" height="${tam}" aria-hidden="true">
+    ${arco(-90,0,op[0])}${arco(0,90,op[1])}${arco(90,180,op[2])}</svg>`;
+}
+
+/* ═══ Componentes de contenido ═════════════════════════════════ */
+function kpi({t,k,mod="general",ciudad=FOCO,nota}){
+  const s=S(mod,ciudad,k); if(!s) return "";
+  const v=s[iPer];
+  /* En promedio anual el comparable es el mismo tramo del año pasado:
+     un 2026 hasta junio se mide contra Ene-Jun de 2025, no contra 2025 entero. */
+  const p=ANUAL() ? (D.referencia_anual?.[mod]?.[ciudad]?.[k]?.[iPer] ?? null)
+                  : s[iAnterior()];
+  const d=(v!=null&&p!=null)?v-p:null;
+  const malo=SUBIR_ES_MALO.includes(k);
+  let cls="plana", flecha="";
+  if(d!=null&&Math.abs(d)>=0.05){ const sube=d>0; flecha=sube?"▲":"▼";
+    cls=(sube===malo)?"sube":"baja"; }
+  const txt=d==null?"sin comparable":(ES_TASA(k)
+      ? `${flecha} ${fmt1(Math.abs(d))} pp`
+      : `${flecha} ${fmt1(Math.abs(d/(p||1)*100))}%`);
+  const refe=ANUAL()?("vs. "+((P().referencia||[])[iPer]||"el año anterior"))
+                   :"vs. un año antes";
+  return `<article class="kpi">
+    <p class="kpi-t">${esc(t||ETQ[k])}</p>
+    <p class="kpi-v">${ES_TASA(k)?fmt1(v):pers(v)}<span class="kpi-u">${ES_TASA(k)?"%":""}</span></p>
+    <p class="kpi-d"><span class="var ${cls}">${txt}</span><span class="kpi-n">${refe}</span></p>
+    ${nota?`<p class="nota">${esc(nota)}</p>`:""}
+  </article>`;
+}
+
+function panel(titulo,sub,cuerpo,extra="",nota=""){
+  return `<section class="panel">
+    <div class="panel-cab"><div><h3>${esc(titulo)}</h3>${sub?`<p class="sub">${esc(sub)}</p>`:""}</div>${extra}</div>
+    ${cuerpo}${nota?`<p class="nota">${nota}</p>`:""}
+  </section>`;
+}
+
+function leyenda(items){
+  return `<div class="leyenda">${items.map(i=>`<span><i style="background:${i.color}"></i>${esc(NOM(i.nombre))}</span>`).join("")}</div>`;
+}
+
+function ciudadesActivas(mod){
+  const disp=D.series[modo][mod]||{};
+  return [FOCO,...comparar].filter(c=>disp[c]);
+}
+
+function serieRango(mod,ciudad,k){
+  const [i0,i1]=rango(); const s=S(mod,ciudad,k);
+  return s?s.slice(i0,i1+1):[];
+}
+function etiquetasRango(){
+  const [i0,i1]=rango(); return P().etiquetas.slice(i0,i1+1);
+}
+function cortasRango(){
+  const [i0,i1]=rango(); const o=[];
+  for(let i=i0;i<=i1;i++) o.push(etqCorta(i));
+  return o;
+}
+
+/* Quita el tramo inicial sin datos: informalidad arranca en 2021, no en 2007 */
+function recortar(series,etiquetas,cortas){
+  let i0=0;
+  const vivo=i=>series.some(s=>s.datos[i]!=null);
+  while(i0<etiquetas.length-1 && !vivo(i0)) i0++;
+  if(i0===0) return {series,etiquetas,cortas};
+  return {series:series.map(s=>({...s,datos:s.datos.slice(i0)})),
+          etiquetas:etiquetas.slice(i0), cortas:cortas.slice(i0)};
+}
+
+/* Atajo: recorta el vacío inicial y dibuja */
+function pintarLineas(id,series,opts={}){
+  const c=document.getElementById(id); if(!c) return;
+  const r=recortar(series,etiquetasRango(),cortasRango());
+  lineas(c,{...r,unidad:"%",...opts});
+}
+
+/* Dibuja una serie de tiempo comparativa entre ciudades */
+function pintarComparativa(id,mod,k,unidad,alto){
+  const c=document.getElementById(id); if(!c) return;
+  const series=ciudadesActivas(mod).map(ci=>({
+    nombre:ci, color:colorCiudad(ci), grueso:ci===FOCO?3.2:2,
+    datos:serieRango(mod,ci,k)
+  }));
+  const r=recortar(series,etiquetasRango(),cortasRango());
+  lineas(c,{...r,unidad,area:r.series.length===1,alto});
+}
+
+/* ═══ Secciones ════════════════════════════════════════════════ */
+const V={};
+
+V.resumen=()=>{
+  const p=P().etiquetas[iPer], t=tema();
+  const inf=S("informalidad",FOCO,"prop_informalidad");
+  const hayInf=inf&&inf[iPer]!=null;
+  return `
+  ${cabecera("resumen")}
+  <div class="kpis">
+    ${kpi({k:"td",t:"Tasa de desempleo"})}
+    ${kpi({k:"to",t:"Tasa de ocupación"})}
+    ${kpi({k:"tgp",t:"Participación (TGP)"})}
+    ${kpi({k:"ocupados",t:"Personas ocupadas"})}
+    ${hayInf?kpi({k:"prop_informalidad",t:"Informalidad",mod:"informalidad"}):kpi({k:"ts",t:"Subocupación"})}
+  </div>
+  <div class="grid g-23">
+    ${panel("Desempleo en Cali A.M.","Serie comparativa · "+(ANUAL()?"promedio anual":"trimestre móvil"),
+      `<div id="g-res-td"></div>`,"",
+      "La línea gruesa azul sereno es Cali A.M. Pasa el cursor sobre la gráfica para leer todos los valores de un período.")}
+    ${panel("Cómo se compone la fuerza de trabajo","Cali A.M. · "+p,`<div id="g-res-anillo"></div><div id="l-res-anillo"></div>`)}
+  </div>
+  <div class="grid g-3">
+    ${panel("Brecha de género en el desempleo","Puntos porcentuales: mujeres menos hombres",`<div id="g-res-genero"></div>`)}
+    ${panel("Informalidad","Proporción de ocupados informales",`<div id="g-res-inf"></div>`)}
+    ${panel("Desempleo juvenil","Personas entre 15 y 28 años",`<div id="g-res-jov"></div>`)}
+  </div>
+  <div class="grid">
+    ${panel("Ranking de desempleo entre ciudades",`23 ciudades y áreas metropolitanas · ${p}`,`<div id="g-res-rank"></div>`,"",
+      "Datos ordenados de mayor a menor, como pide el sistema de identidad. Cali A.M. aparece resaltada en azul sereno.")}
+  </div>`;
+};
+V.resumen.pintar=()=>{
+  pintarComparativa("g-res-td","general","td","%");
+
+  const oc=S("general",FOCO,"ocupados")?.[iPer], de=S("general",FOCO,"desocupados")?.[iPer];
+  const su=S("general",FOCO,"subocupados")?.[iPer];
+  const partes=[{nombre:"Ocupados plenos",v:(oc||0)-(su||0),color:"#253D90"},
+                {nombre:"Ocupados subocupados",v:su,color:"#6FBCFF"},
+                {nombre:"Desocupados",v:de,color:"#F2661F"}].filter(x=>x.v!=null);
+  anillo(document.getElementById("g-res-anillo"),{partes,etiquetaCentro:"personas en la|fuerza de trabajo"});
+  document.getElementById("l-res-anillo").innerHTML=leyenda(partes.map(p=>({nombre:`${p.nombre} · ${pers(p.v)}`,color:p.color})));
+
+  const [i0,i1]=rango();
+  const m=S("mujeres",FOCO,"td"), h=S("hombres",FOCO,"td");
+  if(m&&h) pintarLineas("g-res-genero",
+    [{nombre:"Brecha (mujeres − hombres)",color:"#DF0064",
+      datos:m.slice(i0,i1+1).map((v,i)=>v==null||h[i0+i]==null?null:+(v-h[i0+i]).toFixed(2))}],
+    {area:true,alto:196});
+
+  const inf=S("informalidad",FOCO,"prop_informalidad");
+  if(inf) pintarLineas("g-res-inf",
+    [{nombre:"Cali A.M.",color:"#E34B13",datos:inf.slice(i0,i1+1)}],{area:true,alto:196});
+
+  const jv=S("juventud",FOCO,"td");
+  if(jv) pintarLineas("g-res-jov",
+    [{nombre:"15 a 28 años",color:"#6E2DD4",datos:jv.slice(i0,i1+1)}],{area:true,alto:196});
+
+  const items=D.ciudades.filter(c=>!/^Total/.test(c)).map(c=>({nombre:c,v:S("general",c,"td")?.[iPer]}));
+  barras(document.getElementById("g-res-rank"),{items,unidad:"%",color:"#BDE0FF"});
+};
+
+V.panorama=()=>`
+  ${cabecera("panorama")}
+  <div class="kpis">
+    ${kpi({k:"td"})}${kpi({k:"to"})}${kpi({k:"tgp"})}${kpi({k:"ts"})}
+    ${kpi({k:"pet",t:"Población en edad de trabajar"})}
+  </div>
+  <div class="grid g-2">
+    ${panel("Tasa de desempleo","Comparativa entre ciudades",`<div id="g-pan-td"></div><div id="l-pan"></div>`)}
+    ${panel("Tasa de ocupación","Ocupados sobre población en edad de trabajar",`<div id="g-pan-to"></div>`)}
+    ${panel("Tasa global de participación","Fuerza de trabajo sobre población en edad de trabajar",`<div id="g-pan-tgp"></div>`)}
+    ${panel("Tasa de subocupación","Quienes quieren y pueden trabajar más",`<div id="g-pan-ts"></div>`,"",
+      "El corte entre marzo y septiembre de 2020 no es una caída: la pandemia interrumpió la medición de subocupación y el DANE no publicó el dato.")}
+  </div>
+  <div class="grid g-23">
+    ${panel("Ocupados y desocupados en Cali A.M.","Niveles en personas",`<div id="g-pan-niv"></div><div id="l-pan-niv"></div>`)}
+    ${panel("De dónde sale cada cifra","Cali A.M. · "+P().etiquetas[iPer],`<div id="g-pan-est"></div>`,"",
+      "Cada barra reparte el nivel de arriba. Así se ve que los desocupados son una fracción pequeña de la población en edad de trabajar, aunque la tasa de desempleo los mida solo contra la fuerza de trabajo.")}
+  </div>`;
+V.panorama.pintar=()=>{
+  ["td","to","tgp","ts"].forEach(k=>pintarComparativa("g-pan-"+k,"general",k,"%"));
+  document.getElementById("l-pan").innerHTML=leyenda(ciudadesActivas("general").map(c=>({nombre:c,color:colorCiudad(c)})));
+  const [i0,i1]=rango();
+  const caps=[{nombre:"Ocupados",color:"#253D90",datos:S("general",FOCO,"ocupados").slice(i0,i1+1)},
+              {nombre:"Desocupados",color:"#F2661F",datos:S("general",FOCO,"desocupados").slice(i0,i1+1)}];
+  pintarLineas("g-pan-niv",caps,{unidad:"n",area:true});
+  document.getElementById("l-pan-niv").innerHTML=leyenda(caps);
+  const pet=S("general",FOCO,"pet")?.[iPer], ft=S("general",FOCO,"ft")?.[iPer];
+  const oc=S("general",FOCO,"ocupados")?.[iPer], de=S("general",FOCO,"desocupados")?.[iPer];
+  const fu=S("general",FOCO,"ffft")?.[iPer];
+  cascada(document.getElementById("g-pan-est"),{base:pet,niveles:[
+    {partes:[{nombre:"En edad de trabajar",v:pet,color:"#12176B"}]},
+    {partes:[{nombre:"Fuerza de trabajo",v:ft,color:"#253D90"},
+             {nombre:"Fuera de la fuerza",v:fu,color:"#BDE0FF",claro:true}]},
+    {partes:[{nombre:"Ocupados",v:oc,color:"#3593FC"},
+             {nombre:"Desocupados",v:de,color:"#F2661F"}]}
+  ]});
+};
+
+V.genero=()=>`
+  ${cabecera("genero")}
+  <div class="kpis">
+    ${kpi({k:"td",t:"Desempleo · mujeres",mod:"mujeres"})}
+    ${kpi({k:"td",t:"Desempleo · hombres",mod:"hombres"})}
+    ${kpi({k:"tgp",t:"Participación · mujeres",mod:"mujeres"})}
+    ${kpi({k:"tgp",t:"Participación · hombres",mod:"hombres"})}
+    ${kpi({k:"ocupados",t:"Ocupadas",mod:"mujeres"})}
+  </div>
+  <div class="grid g-2">
+    ${panel("Desempleo por sexo en Cali A.M.","Trayectoria comparada",`<div id="g-gen-td"></div><div id="l-gen"></div>`)}
+    ${panel("Participación laboral por sexo","Tasa global de participación",`<div id="g-gen-tgp"></div>`)}
+    ${panel("Brecha de desempleo","Mujeres menos hombres, en puntos porcentuales",`<div id="g-gen-bre"></div>`,"",
+      "Una brecha positiva significa que el desempleo femenino supera al masculino.")}
+    ${panel("Brecha de participación","Hombres menos mujeres, en puntos porcentuales",`<div id="g-gen-brp"></div>`)}
+  </div>
+  <div class="grid">
+    ${panel("Brecha de desempleo entre ciudades",`Mujeres menos hombres · ${P().etiquetas[iPer]}`,`<div id="g-gen-rank"></div>`)}
+  </div>`;
+V.genero.pintar=()=>{
+  const [i0,i1]=rango();
+  const par=[{nombre:"Mujeres",color:"#DF0064",mod:"mujeres"},{nombre:"Hombres",color:"#253D90",mod:"hombres"}];
+  ["td","tgp"].forEach(k=>pintarLineas("g-gen-"+k,
+    par.map(p=>({nombre:p.nombre,color:p.color,datos:(S(p.mod,FOCO,k)||[]).slice(i0,i1+1)}))));
+  document.getElementById("l-gen").innerHTML=leyenda(par);
+  const brecha=(k,inv)=>{ const m=S("mujeres",FOCO,k),h=S("hombres",FOCO,k);
+    if(!m||!h) return []; return m.slice(i0,i1+1).map((v,i)=>{const o=h[i0+i];
+      return (v==null||o==null)?null:+((inv?o-v:v-o).toFixed(2));}); };
+  pintarLineas("g-gen-bre",[{nombre:"Brecha de desempleo",color:"#DF0064",datos:brecha("td",false)}],{area:true,alto:230});
+  pintarLineas("g-gen-brp",[{nombre:"Brecha de participación",color:"#B80051",datos:brecha("tgp",true)}],{area:true,alto:230});
+  const items=D.ciudades.filter(c=>!/^Total/.test(c)).map(c=>{
+    const m=S("mujeres",c,"td")?.[iPer], h=S("hombres",c,"td")?.[iPer];
+    return {nombre:c,v:(m==null||h==null)?null:+(m-h).toFixed(2)};});
+  barras(document.getElementById("g-gen-rank"),{items,unidad:"%",color:"#BDE0FF"});
+};
+
+V.informal=()=>`
+  ${cabecera("informal")}
+  <div class="kpis">
+    ${kpi({k:"prop_informalidad",t:"Proporción de informalidad",mod:"informalidad"})}
+    ${kpi({k:"informal",t:"Ocupados informales",mod:"informalidad"})}
+    ${kpi({k:"formal",t:"Ocupados formales",mod:"informalidad"})}
+    ${kpi({k:"ocupados",t:"Total ocupados",mod:"informalidad"})}
+  </div>
+  <div class="grid g-23">
+    ${panel("Proporción de informalidad","Comparativa entre ciudades",`<div id="g-inf-prop"></div><div id="l-inf"></div>`)}
+    ${panel("Formales e informales","Cali A.M. · composición del empleo",`<div id="g-inf-comp"></div><div id="l-inf-comp"></div>`)}
+  </div>
+  <div class="grid">
+    ${panel("Informalidad entre ciudades",`23 ciudades y áreas metropolitanas · ${P().etiquetas[iPer]}`,`<div id="g-inf-rank"></div>`,"",
+      "La serie de informalidad del DANE arranca en el primer trimestre de 2021 por el cambio metodológico de la GEIH.")}
+  </div>`;
+V.informal.pintar=()=>{
+  pintarComparativa("g-inf-prop","informalidad","prop_informalidad","%");
+  document.getElementById("l-inf").innerHTML=leyenda(ciudadesActivas("informalidad").map(c=>({nombre:c,color:colorCiudad(c)})));
+  const [i0,i1]=rango();
+  const caps=[{nombre:"Formales",color:"#253D90",datos:(S("informalidad",FOCO,"formal")||[]).slice(i0,i1+1)},
+              {nombre:"Informales",color:"#F2661F",datos:(S("informalidad",FOCO,"informal")||[]).slice(i0,i1+1)}];
+  const rc=recortar(caps,etiquetasRango(),cortasRango());
+  const paso=Math.max(1,Math.ceil(rc.etiquetas.length/26));
+  apiladas(document.getElementById("g-inf-comp"),{
+    etiquetas:rc.cortas.filter((_,i)=>i%paso===0),
+    capas:rc.series.map(c=>({...c,datos:c.datos.filter((_,i)=>i%paso===0)}))});
+  document.getElementById("l-inf-comp").innerHTML=leyenda(caps);
+  const items=D.ciudades.filter(c=>!/^Total/.test(c)).map(c=>({nombre:c,v:S("informalidad",c,"prop_informalidad")?.[iPer]}));
+  barras(document.getElementById("g-inf-rank"),{items,unidad:"%",color:"#BDE0FF"});
+};
+
+V.juventud=()=>`
+  ${cabecera("juventud")}
+  <div class="kpis">
+    ${kpi({k:"td",t:"Desempleo juvenil",mod:"juventud"})}
+    ${kpi({k:"to",t:"Ocupación juvenil",mod:"juventud"})}
+    ${kpi({k:"tgp",t:"Participación juvenil",mod:"juventud"})}
+    ${kpi({k:"ocupados",t:"Jóvenes ocupados",mod:"juventud"})}
+    ${kpi({k:"desocupados",t:"Jóvenes desocupados",mod:"juventud"})}
+  </div>
+  <div class="grid g-2">
+    ${panel("Desempleo juvenil","Personas de 15 a 28 años · comparativa entre ciudades",`<div id="g-juv-td"></div><div id="l-juv"></div>`)}
+    ${panel("Jóvenes frente al total","Cali A.M. · tasa de desempleo",`<div id="g-juv-vs"></div><div id="l-juv-vs"></div>`,"",
+      "La distancia entre las dos líneas es la penalidad de entrada al mercado laboral que enfrentan los jóvenes.")}
+    ${panel("Ocupación juvenil","Ocupados sobre jóvenes en edad de trabajar",`<div id="g-juv-to"></div>`)}
+    ${panel("Participación juvenil","Tasa global de participación 15 a 28 años",`<div id="g-juv-tgp"></div>`)}
+  </div>
+  <div class="grid">
+    ${panel("Desempleo juvenil entre ciudades",`23 ciudades y áreas metropolitanas · ${P().etiquetas[iPer]}`,`<div id="g-juv-rank"></div>`)}
+  </div>`;
+V.juventud.pintar=()=>{
+  ["td","to","tgp"].forEach(k=>pintarComparativa("g-juv-"+k,"juventud",k,"%"));
+  document.getElementById("l-juv").innerHTML=leyenda(ciudadesActivas("juventud").map(c=>({nombre:c,color:colorCiudad(c)})));
+  const [i0,i1]=rango();
+  const caps=[{nombre:"15 a 28 años",color:"#6E2DD4",datos:(S("juventud",FOCO,"td")||[]).slice(i0,i1+1)},
+              {nombre:"Población total",color:"#253D90",datos:(S("general",FOCO,"td")||[]).slice(i0,i1+1)}];
+  pintarLineas("g-juv-vs",caps);
+  document.getElementById("l-juv-vs").innerHTML=leyenda(caps);
+  const items=D.ciudades.filter(c=>!/^Total/.test(c)).map(c=>({nombre:c,v:S("juventud",c,"td")?.[iPer]}));
+  barras(document.getElementById("g-juv-rank"),{items,unidad:"%",color:"#BDE0FF"});
+};
+
+V.ciudades=()=>{
+  const opts=["td","to","tgp","ts","prop_informalidad"].map(k=>
+    `<button data-ind="${k}" aria-pressed="${k===indCiudades}">${SIGLAS[k]||ETQ[k]}</button>`).join("");
+  return `
+  ${cabecera("ciudades")}
+  <div class="grid g-23">
+    ${panel("Ranking del indicador",`23 ciudades y áreas metropolitanas · ${P().etiquetas[iPer]}`,
+      `<div id="g-ciu-rank"></div>`,`<div class="mini-seg" id="seg-ind">${opts}</div>`)}
+    ${panel("Posición de Cali A.M.","Puesto en el ranking a lo largo del tiempo",`<div id="g-ciu-pos"></div>`,"",
+      "Puesto 1 = el valor más alto entre las 23 ciudades. Para desempleo, subocupación e informalidad, subir en el ranking es una mala señal.")}
+  </div>
+  <div class="grid">
+    ${panel("Tabla comparativa",`Todos los indicadores · ${P().etiquetas[iPer]}`,`<div class="tabla-env" id="t-ciu"></div>`)}
+  </div>`;
+};
+let indCiudades="td";
+V.ciudades.pintar=()=>{
+  const ciu=D.ciudades.filter(c=>!/^Total/.test(c));
+  const mod=indCiudades==="prop_informalidad"?"informalidad":"general";
+  barras(document.getElementById("g-ciu-rank"),{
+    items:ciu.map(c=>({nombre:c,v:S(mod,c,indCiudades)?.[iPer]})),unidad:"%",color:"#BDE0FF"});
+
+  const [i0,i1]=rango();
+  const pos=[];
+  for(let i=i0;i<=i1;i++){
+    const arr=ciu.map(c=>({c,v:S(mod,c,indCiudades)?.[i]})).filter(x=>x.v!=null).sort((a,b)=>b.v-a.v);
+    const j=arr.findIndex(x=>x.c===FOCO);
+    pos.push(j<0?null:j+1);
+  }
+  pintarLineas("g-ciu-pos",[{nombre:"Puesto de Cali A.M.",color:"#5F9C14",datos:pos}],
+    {unidad:"puesto",alto:272,invertirY:true,area:false});
+
+  const cols=["td","to","tgp","ts","prop_informalidad","ocupados","desocupados"];
+  const filas=ciu.map(c=>{
+    const celdas=cols.map(k=>{
+      const m=k==="prop_informalidad"?"informalidad":"general";
+      const v=S(m,c,k)?.[iPer];
+      return `<td>${v==null?"—":(ES_TASA(k)?fmt1(v)+"%":pers(v))}</td>`;}).join("");
+    return `<tr class="${c===FOCO?"foco":""}"><td>${esc(NOM(c))}</td>${celdas}</tr>`;});
+  document.getElementById("t-ciu").innerHTML=
+    `<table><thead><tr><th>Ciudad</th>${cols.map(k=>`<th>${esc(SIGLAS[k]||ETQ[k])}</th>`).join("")}</tr></thead>
+     <tbody>${filas.join("")}</tbody></table>`;
+
+  document.getElementById("seg-ind").addEventListener("click",e=>{
+    const b=e.target.closest("button"); if(!b) return;
+    indCiudades=b.dataset.ind; render();
+  });
+};
+
+V.datos=()=>`
+  ${cabecera("datos")}
+  <div class="grid g-2">
+    ${panel("De dónde salen los datos","Anexos mensuales de la GEIH",`
+      <ul style="padding-left:19px;line-height:1.85;font-size:14px">
+        <li><b>Panorama general:</b> anexo de mercado laboral, hoja de 23 ciudades y áreas metropolitanas.</li>
+        <li><b>Género:</b> anexo de mercado laboral por sexo, hojas de hombres y mujeres.</li>
+        <li><b>Informalidad:</b> anexo de empleo informal y seguridad social. Serie desde ${esc(D.meta.inicio_informalidad)}.</li>
+        <li><b>Juventud:</b> anexo de mercado laboral de la juventud, 15 a 28 años.</li>
+      </ul>
+      <p class="nota">Archivos procesados en esta versión:<br>${Object.values(D.meta.archivos).map(esc).join("<br>")}</p>`)}
+    ${panel("Cómo se calcula el promedio anual","Nota metodológica",`
+      <p style="font-size:14px;line-height:1.7">El promedio del año se arma con los cuatro trimestres
+      móviles que <b>no se traslapan</b>: Ene-Mar, Abr-Jun, Jul-Sep y Oct-Dic. Así cada mes del año
+      entra exactamente una vez.</p>
+      <p style="font-size:14px;line-height:1.7;margin-top:9px">Los niveles de población se promedian y
+      las tasas se vuelven a calcular a partir de esos niveles. Promediar tasas directamente sesgaría
+      el resultado hacia los trimestres con menos población.</p>
+      <p class="nota">Comprobación: para Cali A.M. en 2025 este método da una tasa de desempleo de 8,75%
+      y 1.115.000 ocupados, prácticamente idéntico a lo que publica el DANE para el año completo.</p>
+      ${(D.meta.anios_parciales||[]).length?`<p class="nota"><b>Año en curso:</b>
+      ${D.meta.anios_parciales.join(", ")} todavía no tiene los cuatro trimestres, así que se promedia
+      con los disponibles y aparece marcado en el selector de período.</p>`:""}`)}
+    ${panel("Cómo se actualiza","Cada mes, sin tocar el tablero",`
+      <ol style="padding-left:19px;line-height:1.85;font-size:14px">
+        <li>Descarga los cuatro anexos nuevos del DANE.</li>
+        <li>Ponlos en la carpeta <code>datos/</code> reemplazando los anteriores.</li>
+        <li>Ejecuta <code>python etl.py</code>.</li>
+        <li>Publica la carpeta <code>docs/</code>.</li>
+      </ol>
+      <p class="nota">El proceso no depende de números de fila ni de columna: busca las etiquetas de texto
+      en cada hoja, así que sigue funcionando cuando el DANE agrega períodos o mueve bloques.</p>`)}
+    ${panel("Advertencias de lectura","Antes de citar una cifra",`
+      <ul style="padding-left:19px;line-height:1.85;font-size:14px">
+        <li>Las poblaciones vienen en miles y aquí se muestran ya convertidas a personas.</li>
+        <li>Toda variable cuya proporción respecto a la fuerza de trabajo sea menor al 10% tiene un error de muestreo superior al 5%, el límite de calidad que admite el DANE.</li>
+        <li>Entre 2010 y 2020 la información ya incorpora los ajustes de población del cambio de marco de 2021.</li>
+        <li>Cali A.M. incluye a Cali y Yumbo.</li>
+      </ul>`)}
+  </div>`;
+V.datos.pintar=()=>{};
+
+function cabecera(id){
+  const s=SECCIONES.find(x=>x.id===id), t=TEMAS[s.tema];
+  return `<div class="cab"><div class="cab-arcos">${arcos(t.c,46)}</div>
+    <div><h2>${esc(s.nom)}</h2><p>${esc(s.desc)}</p></div></div>`;
+}
+
+/* ═══ Render ═══════════════════════════════════════════════════ */
+function render(){
+  const t=tema();
+  document.documentElement.style.setProperty("--acento",t.c);
+  document.documentElement.style.setProperty("--acento-suave",t.suave);
+  document.documentElement.style.setProperty("--acento-fuerte",t.fuerte);
+  const main=document.getElementById("main");
+  main.innerHTML=`<section class="seccion">${V[activa]()}</section>`;
+  requestAnimationFrame(()=>V[activa].pintar&&V[activa].pintar());
+  document.querySelectorAll("#nav .nav-b").forEach(b=>
+    b.setAttribute("aria-current",b.dataset.sec===activa?"true":"false"));
+}
+
+function pintarChips(){
+  const cont=document.getElementById("chips");
+  const sel=document.getElementById("sel-ciudad");
+  cont.querySelectorAll(".chip").forEach(n=>n.remove());
+  const frag=document.createDocumentFragment();
+  const f=document.createElement("span");
+  f.className="chip foco"; f.innerHTML=`<span class="pt" style="background:#6FBCFF"></span>${esc(NOM(FOCO))}`;
+  frag.appendChild(f);
+  comparar.forEach(c=>{
+    const s=document.createElement("span"); s.className="chip";
+    s.innerHTML=`<span class="pt" style="background:${colorCiudad(c)}"></span>${esc(NOM(c))}<button aria-label="Quitar ${esc(NOM(c))}">×</button>`;
+    s.querySelector("button").onclick=()=>{comparar=comparar.filter(x=>x!==c);pintarChips();render();};
+    frag.appendChild(s);
+  });
+  cont.insertBefore(frag,sel);
+  sel.innerHTML=`<option value="">+ agregar ciudad</option>`+
+    D.ciudades.filter(c=>c!==FOCO&&!comparar.includes(c))
+      .map(c=>`<option value="${esc(c)}">${esc(NOM(c))}</option>`).join("");
+}
+
+function pintarPeriodos(){
+  const p=P(), sel=document.getElementById("sel-per");
+  sel.innerHTML=p.etiquetas.map((e,i)=>`<option value="${i}">${esc(e)}</option>`).join("");
+  iPer=Math.min(iPer,p.etiquetas.length-1);
+  sel.value=iPer;
+  const anios=[...new Set(p.anios)].sort((a,b)=>a-b);
+  const sd=document.getElementById("sel-desde");
+  sd.innerHTML=anios.filter(a=>a<=p.anios[iPer]).map(a=>`<option value="${a}">${a}</option>`).join("");
+  if(desdeAnio<anios[0]) desdeAnio=anios[0];
+  sd.value=desdeAnio;
+}
+
+/* ═══ Descarga CSV ═════════════════════════════════════════════ */
+function descargarCSV(){
+  const p=P(), mods=["general","hombres","mujeres","juventud","informalidad"];
+  const filas=[["ciudad","modulo","indicador","periodo","valor"]];
+  [FOCO,...comparar].forEach(c=>mods.forEach(m=>{
+    const ind=D.series[modo][m]?.[c]; if(!ind) return;
+    Object.entries(ind).forEach(([k,serie])=>serie.forEach((v,i)=>{
+      if(v!=null) filas.push([c,m,ETQ[k]||k,p.etiquetas[i],String(v).replace(".",",")]);
+    }));
+  }));
+  const csv="\uFEFF"+filas.map(f=>f.map(x=>`"${x}"`).join(";")).join("\n");
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));
+  a.download=`mercado-laboral-cali-${modo}-${p.codigos[iPer]}.csv`; a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+/* ═══ Arranque ═════════════════════════════════════════════════ */
+/* El tablero funciona de dos formas:
+   - archivo unico: los datos vienen embebidos en un <script type="application/json">
+   - carpeta publicada: los datos se piden a datos.json
+   Es el mismo codigo; solo cambia de donde salen los numeros. */
+const _emb=document.getElementById("datos-embebidos");
+(_emb ? Promise.resolve(JSON.parse(_emb.textContent))
+      : fetch("datos.json").then(r=>{
+          if(!r.ok) throw new Error("No se pudo leer datos.json ("+r.status+")");
+          return r.json();
+        })
+).then(d=>{
+  D=d;
+  document.getElementById("nav").innerHTML=
+    `<p class="rail-titulo">Secciones</p>`+
+    SECCIONES.map(s=>`<button class="nav-b" data-sec="${s.id}">
+      <span class="nav-arco">${arcos(s.id===activa?"#12176B":TEMAS[s.tema].c,17,[1,.6,.32])}</span>${esc(s.nom)}</button>`).join("");
+  document.getElementById("pie-act").textContent=
+    `Último trimestre móvil: ${d.meta.ultimo_tm}. Tablero generado el ${d.meta.generado}.`;
+
+  comparar=comparar.filter(c=>d.series.tm.general[c]);
+  /* En celular, 232 trimestres en 360 px no se leen: se arranca más cerca */
+  if(innerWidth<760){ desdeAnio=2019; comparar=comparar.slice(0,2); }
+  pintarPeriodos();
+  iPer=P().etiquetas.length-1;
+  document.getElementById("sel-per").value=iPer;
+  pintarChips();
+  render();
+
+  document.getElementById("nav").addEventListener("click",e=>{
+    const b=e.target.closest(".nav-b"); if(!b) return;
+    activa=b.dataset.sec; scrollTo({top:0,behavior:"smooth"}); render();
+  });
+  document.querySelectorAll(".seg [data-modo]").forEach(b=>b.addEventListener("click",()=>{
+    modo=b.dataset.modo;
+    document.querySelectorAll(".seg [data-modo]").forEach(x=>x.setAttribute("aria-pressed",x===b));
+    iPer=P().codigos.length-1;
+    desdeAnio=Math.max(desdeAnio,P().anios[0]);
+    pintarPeriodos(); render();
+  }));
+  document.getElementById("sel-per").addEventListener("change",e=>{
+    iPer=+e.target.value; pintarPeriodos(); render();});
+  document.getElementById("sel-desde").addEventListener("change",e=>{
+    desdeAnio=+e.target.value; render();});
+  document.getElementById("sel-ciudad").addEventListener("change",e=>{
+    if(e.target.value&&comparar.length<7){comparar.push(e.target.value);pintarChips();render();}
+    else e.target.value="";});
+  document.getElementById("btn-csv").addEventListener("click",descargarCSV);
+  document.getElementById("btn-print").addEventListener("click",()=>print());
+  addEventListener("resize",()=>{clearTimeout(window._rz);window._rz=setTimeout(render,220);});
+
+  document.getElementById("carga").remove();
+  document.getElementById("app").style.visibility="visible";
+}).catch(err=>{
+  document.getElementById("carga").innerHTML=
+    `<div style="text-align:center;max-width:440px;padding:24px">
+      <h2 style="font-family:var(--display);color:#12176B;margin-bottom:10px">No se pudieron cargar los datos</h2>
+      <p style="color:#4A5178;font-size:14px">${esc(err.message)}</p>
+      <p style="color:#7C82A3;font-size:13px;margin-top:12px">Ejecuta <code>python etl.py</code> para generar
+      <code>datos.json</code>, y abre el tablero desde un servidor web
+      (<code>python -m http.server</code>) en vez de hacer doble clic sobre el archivo.</p>
+    </div>`;
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,27 @@
+Fuentes institucionales
+=======================
+
+El tablero busca primero las fuentes de marca y, si no las encuentra, usa
+sustitutas de Google Fonts. Para activar las reales, pon aquí estos archivos
+con exactamente estos nombres:
+
+    SaviorSans-ExpandedLight.woff2
+    SaviorSans-ExpandedBold.woff2
+    Libertad-Regular.woff2
+    Libertad-Bold.woff2
+
+No hay que tocar nada más: el @font-face ya está declarado en index.html.
+
+Dos advertencias:
+
+1. Savior Sans (Sudtipos) y Libertad (TipoType) son fuentes comerciales. La
+   licencia de escritorio NO cubre publicarlas en un sitio web: se necesita
+   licencia webfont. Confírmalo antes de subirlas.
+
+2. Si solo tienes .otf o .ttf, conviértelos a .woff2 con
+   https://www.fontsquirrel.com/tools/webfont-generator o con woff2_compress.
+   El .woff2 pesa la tercera parte y carga mucho más rápido.
+
+Mientras tanto se usan:
+    Savior Sans Expanded -> Encode Sans Expanded (grotesca ancha)
+    Libertad             -> Source Sans 3

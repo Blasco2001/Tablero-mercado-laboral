@@ -1,0 +1,6 @@
+# Entorno de Python local
+.venv/
+__pycache__/
+
+# Basura del sistema
+.DS_Store
