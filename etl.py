@@ -203,6 +203,43 @@ def localizar_anexos(carpeta: Path) -> dict:
     return res
 
 
+def urls_de_origen(anexos: dict) -> dict:
+    """De que URL del DANE salio cada anexo, para poder citarla en el tablero.
+
+    Primero se mira datos/historial.csv, que deja descargar.py con la URL
+    exacta de la que bajo cada archivo. Es la fuente autoritativa: dice de
+    donde salio ese archivo, no de donde deberia haber salido.
+
+    Si no hay historial -- porque los anexos entraron a mano, como paso hasta
+    que se automatizo -- se reconstruye la URL canonica a partir del periodo
+    que declara el nombre del archivo. Si ni eso se puede, queda vacia: es
+    preferible no ofrecer un enlace a ofrecer uno roto.
+    """
+    from descargar import ARCHIVOS, MODULOS, cierre_de, nombre_esperado
+
+    historial = {}
+    ruta_hist = next(iter(anexos.values())).parent / "historial.csv"
+    if ruta_hist.exists():
+        for linea in ruta_hist.read_text(encoding="utf-8").splitlines()[1:]:
+            campos = linea.split(";")
+            if len(campos) >= 6:
+                historial[campos[3]] = campos[5]
+
+    salida = {}
+    for modulo, ruta in anexos.items():
+        url = historial.get(ruta.name, "")
+        if not url:
+            cierre = cierre_de(ruta.name)
+            if cierre and modulo in MODULOS:
+                url = f"{ARCHIVOS}/{nombre_esperado(modulo, *cierre)}"
+        salida[modulo] = {
+            "archivo": ruta.name,
+            "url": url,
+            "pagina": MODULOS.get(modulo, {}).get("pagina", ""),
+        }
+    return salida
+
+
 # ---------------------------------------------------------------------------
 # Parser generico de hojas por bloques de ciudad
 # ---------------------------------------------------------------------------
@@ -639,7 +676,7 @@ def main():
             "ultimo_tm": per_tm[-1][1],
             "ultimo_anio": per_an[-1][1],
             "anios_parciales": parciales,
-            "archivos": {k: v.name for k, v in anexos.items()},
+            "archivos": urls_de_origen(anexos),
             "nota_anual": (
                 "El promedio del anio se calcula con los cuatro trimestres moviles que no "
                 "se traslapan -- Ene-Mar, Abr-Jun, Jul-Sep y Oct-Dic -- de modo que cada mes "
