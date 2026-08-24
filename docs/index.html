@@ -390,14 +390,17 @@ tbody tr.foco td:first-child{background:var(--a100)}
 const FOCO = "Cali A.M.";
 
 /* ── Momentos cromáticos por sección (brandbook: colores por temática) */
+/* El universo de comparación son 23 ciudades y áreas metropolitanas, no las
+   capitales del país: no todas son capitales y varias son áreas metropolitanas,
+   no ciudades. Con Cali dentro, las otras son 22. */
 const SECCIONES = [
-  {id:"resumen",   nom:"Resumen",             tema:"azul",       desc:"Los números que definen hoy el mercado laboral de Cali A.M."},
-  {id:"panorama",  nom:"Panorama general",    tema:"feijo",      desc:"Ocupación, desempleo y participación desde 2007."},
-  {id:"genero",    nom:"Brechas de género",   tema:"magenta",    desc:"Cómo se reparten el empleo y la participación entre hombres y mujeres."},
-  {id:"informal",  nom:"Informalidad",        tema:"chontaduro", desc:"Proporción y composición del empleo informal desde 2021."},
-  {id:"juventud",  nom:"Juventud",            tema:"violeta",    desc:"Mercado laboral de las personas entre 15 y 28 años."},
-  {id:"ciudades",  nom:"Comparativo ciudades",tema:"viche",      desc:"Cali frente a las demás capitales del país."},
-  {id:"datos",     nom:"Fuentes y metodología",tema:"azul",       desc:"De dónde sale cada cifra y cómo se calcula."},
+  {id:"resumen",   nom:"Resumen",             tema:"azul",       desc:"Principales indicadores del mercado laboral de Cali A.M."},
+  {id:"panorama",  nom:"Panorama general",    tema:"feijo",      desc:"Ocupación, desempleo y participación desde 2007"},
+  {id:"genero",    nom:"Brechas de género",   tema:"magenta",    desc:"Indicadores laborales desagregados por sexo y brechas entre hombres y mujeres"},
+  {id:"informal",  nom:"Informalidad",        tema:"chontaduro", desc:"Proporción y composición del empleo informal desde 2021"},
+  {id:"juventud",  nom:"Juventud",            tema:"violeta",    desc:"Mercado laboral de la población entre 15 y 28 años"},
+  {id:"ciudades",  nom:"Comparativo ciudades",tema:"viche",      desc:"Cali A.M. frente a las 23 ciudades y áreas metropolitanas"},
+  {id:"datos",     nom:"Fuentes y metodología",tema:"azul",       desc:"Origen de los datos, definiciones y advertencias de lectura"},
 ];
 
 /* `claro` es el tercer tono que piden las morfologías: el arte original
