@@ -39,6 +39,17 @@ def check(nombre, condicion, detalle=""):
         fallos.append(nombre)
 
 
+def ES_TASA(k):
+    """Las tasas se recalculan en el promedio anual a partir de los niveles,
+    asi que no tienen por que aparecer en los dos modos.
+
+    Se reconocen por el nombre y no por una lista: una lista se queda vieja en
+    cuanto alguien agrega un indicador, y entonces la prueba de mas abajo
+    empieza a fallar por una razon que no es la suya.
+    """
+    return k.startswith(("pct_", "prop_")) or k in ("td", "to", "tgp", "ts")
+
+
 def normalizar(txt):
     """Minusculas, sin tildes, sin espacios repetidos. Igual que en etl.py.
 
@@ -186,8 +197,72 @@ def main():
               esperado in d["ciudades"],
               f"hay: {[c for c in d['ciudades'] if 'otal' in c]}")
 
-    # ── 7. Rangos plausibles ─────────────────────────────────────────
-    print("\n7. Los numeros caen donde deben")
+    # ── 7. Modulos nuevos ────────────────────────────────────────────
+    print("\n7. Fuera de la fuerza de trabajo y posicion ocupacional")
+    i_ult = len(tm["codigos"]) - 1
+
+    # Las dos hojas arrancan en 2010, no en 2007. El promedio anual no puede
+    # inventarse los tres primeros anios.
+    for mod, primer_anio in (("fuera", 2010), ("posicion", 2010)):
+        ser = d["series"]["an"][mod]["Cali A.M."]
+        clave = "ffft" if mod == "fuera" else "ocupados"
+        con_dato = [an["codigos"][j] for j, v in enumerate(ser[clave]) if v is not None]
+        check(f"{mod}: el promedio anual no inventa anios antes de {primer_anio}",
+              con_dato and int(con_dato[0]) == primer_anio,
+              f"primer anio con dato: {con_dato[0] if con_dato else 'ninguno'}")
+
+    # Fuera de la fuerza de trabajo: las tres actividades suman el total
+    f = d["series"]["tm"]["fuera"]["Cali A.M."]
+    tot_f = f["ffft"][i_ult]
+    partes_f = sum(f[k][i_ult] for k in ("estudiando", "hogar", "otros_ffft"))
+    check("fuera: estudiando + hogar + otros = el total",
+          abs(partes_f - tot_f) < 0.6, f"{partes_f:.1f} vs {tot_f:.1f} (miles)")
+    check("fuera: Cali A.M. cerca de 684.200 personas",
+          abs(tot_f * 1000 - 684_200) < 700, f"{tot_f * 1000:,.0f}")
+    for k, esperado in (("hogar", 54.4), ("estudiando", 23.2), ("otros_ffft", 22.5)):
+        pct = f[k][i_ult] / tot_f * 100
+        check(f"fuera: {k} cerca de {esperado}%", abs(pct - esperado) < 0.15, f"{pct:.2f}%")
+
+    # Posicion ocupacional: las categorias suman los ocupados, y esos ocupados
+    # son los mismos del modulo general. Si esas dos cosas dejan de cuadrar,
+    # el anexo cambio de forma.
+    q = d["series"]["tm"]["posicion"]["Cali A.M."]
+    oc_pos = q["ocupados"][i_ult]
+    cats = ("particular", "gobierno", "domestico", "cuenta",
+            "patron", "familiar", "jornalero", "otro_pos")
+    suma = sum(q[k][i_ult] for k in cats if q.get(k) and q[k][i_ult] is not None)
+    check("posicion: las categorias suman la poblacion ocupada",
+          abs(suma - oc_pos) < 0.6, f"{suma:.1f} vs {oc_pos:.1f} (miles)")
+    oc_gen = d["series"]["tm"]["general"]["Cali A.M."]["ocupados"][i_ult]
+    check("posicion: sus ocupados son los mismos del modulo general",
+          abs(oc_pos - oc_gen) < 0.6, f"{oc_pos:.1f} vs {oc_gen:.1f} (miles)")
+    for k, esperado in (("particular", 56.0), ("cuenta", 34.4), ("domestico", 3.4),
+                        ("patron", 2.6), ("gobierno", 2.4), ("familiar", 1.1)):
+        pct = q[k][i_ult] / oc_pos * 100
+        check(f"posicion: {k} cerca de {esperado}%", abs(pct - esperado) < 0.15, f"{pct:.2f}%")
+
+    # "Otro" viene en cero exacto, que por la regla 1 no es un dato
+    check("posicion: la categoria 'Otro' del DANE queda vacia, no en cero",
+          q.get("otro_pos", [None])[i_ult] is None)
+
+    # Cali tiene que estar en los dos modulos nuevos
+    for mod in ("fuera", "posicion"):
+        check(f"{mod}: Cali A.M. esta presente", "Cali A.M." in d["series"]["tm"][mod])
+
+    # Un indicador de nivel que no este en NIVELES desaparece del promedio anual
+    # sin avisar: la serie existe en trimestre movil y en anual no. Paso justo
+    # eso al agregar estos dos modulos. Las tasas no aplican, porque el anual
+    # las recalcula y algunas solo existen en uno de los dos modos.
+    for mod in d["series"]["tm"]:
+        en_tm = {k for k, v in d["series"]["tm"][mod].get("Cali A.M.", {}).items()
+                 if any(x is not None for x in v)}
+        en_an = set(d["series"]["an"].get(mod, {}).get("Cali A.M.", {}))
+        faltan = {k for k in en_tm - en_an if not ES_TASA(k)}
+        check(f"{mod}: ningun nivel se pierde en el promedio anual",
+              not faltan, f"solo en trimestre movil: {sorted(faltan)}")
+
+    # ── 8. Rangos plausibles ─────────────────────────────────────────
+    print("\n8. Los numeros caen donde deben")
     for k, lo, hi in (("td", 3, 40), ("to", 30, 75), ("tgp", 45, 80),
                       ("pct_pet", 60, 90)):
         vals = [v for v in gen_tm[k] if v is not None]

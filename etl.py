@@ -45,6 +45,9 @@ RAIZ = Path(__file__).resolve().parent
 # trimestre que TERMINA en marzo de 2007. La columna i termina i meses despues.
 ANCLA_TM = (2007, 3)
 ANCLA_INFORMALIDAD = (2021, 3)
+# Las dos hojas nuevas arrancan en 2010, no en 2007
+ANCLA_FUERA = (2010, 3)
+ANCLA_POSICION = (2010, 3)
 
 MESES = ["Ene", "Feb", "Mar", "Abr", "May", "Jun",
          "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"]
@@ -538,11 +541,104 @@ def parse_informalidad(ruta: Path):
 # Promedio del anio
 # ---------------------------------------------------------------------------
 
+# Los niveles que se promedian por anio. Las TASAS no van aqui: se recalculan
+# despues a partir de estos niveles, porque promediar tasas sesga el resultado
+# hacia los trimestres con menos poblacion.
+#
+# Cualquier indicador de nivel que no este en esta lista desaparece del modo
+# "promedio anual" sin avisar. Al agregar un modulo, agregar tambien sus
+# niveles aqui.
 NIVELES = ("pob_total", "pet", "ft", "ocupados", "desocupados", "ffft",
-           "subocupados", "formal", "informal", "pet_joven", "pet_total")
+           "subocupados", "formal", "informal", "pet_joven", "pet_total",
+           # fuera de la fuerza de trabajo, por tipo de actividad
+           "estudiando", "hogar", "otros_ffft",
+           # posicion ocupacional (CISE-93)
+           "particular", "gobierno", "domestico", "cuenta",
+           "patron", "familiar", "jornalero", "otro_pos")
 
 # El promedio anual se define aqui: los cuatro trimestres moviles de cierre.
 TRIMESTRES_CIERRE = (3, 6, 9, 12)
+
+
+# ---------------------------------------------------------------------------
+# Modulo FUERA DE LA FUERZA DE TRABAJO (13 ciudades, trimestre movil 2010-)
+# ---------------------------------------------------------------------------
+
+# Ojo con el universo: esta hoja solo trae 13 ciudades, no 23, y su agregado es
+# "Total 13 ciudades y areas metropolitanas". Las ciudades que faltan quedan
+# sin serie, que es lo correcto: el DANE no la publica.
+MAPA_FUERA = {
+    "ffft":       "poblacion fuera de la fuerza de trabajo",
+    "estudiando": "estudiando",
+    "hogar":      "oficios del hogar",
+    "otros_ffft": "otros",
+}
+
+
+def parse_fuera(ruta: Path):
+    """Poblacion fuera de la fuerza de trabajo, por tipo de actividad."""
+    filas = cargar_hoja(ruta, "Pob_fuera_fuerza_trab_T13ciud")
+    fila_hdr = next(i for i, f in enumerate(filas)
+                    if f and any(x and norm(x).startswith("ene - mar") for x in f[:4]))
+    col_ini = next(c for c, x in enumerate(filas[fila_hdr])
+                   if x and norm(x).startswith("ene - mar"))
+    n_per = contar_periodos(filas, fila_hdr, col_ini)
+    periodos = periodos_desde(ANCLA_FUERA, n_per)
+
+    bloques = detectar_bloques(filas, NOMBRES_CIUDAD)
+    datos = {}
+    for k, (fi, nombre) in enumerate(bloques):
+        ff = bloques[k + 1][0] if k + 1 < len(bloques) else len(filas)
+        b = indicadores_del_bloque(filas, fi, ff, MAPA_FUERA, n_per, col_ini)
+        # El titulo de la hoja repite el nombre del agregado justo encima de su
+        # propio bloque, asi que el primero sale vacio. Se descarta.
+        if b:
+            datos[nombre] = b
+    print(f"  fuera de la ft: {len(datos)} ciudades x {n_per} trimestres moviles "
+          f"({periodos[0][1]} -> {periodos[-1][1]})")
+    return periodos, datos
+
+
+# ---------------------------------------------------------------------------
+# Modulo POSICION OCUPACIONAL (23 ciudades, trimestre movil 2010-)
+# ---------------------------------------------------------------------------
+
+# El anexo de informalidad (EISS) trae otra hoja de posicion ocupacional, pero
+# solo con agregados nacionales y de 13/23 ciudades. Esta, la del anexo general,
+# si trae las 23 ciudades una por una, que es lo que necesita el tablero.
+MAPA_POSICION = {
+    "ocupados":    "poblacion ocupada",
+    "particular":  "obrero, empleado particular",
+    "gobierno":    "obrero, empleado del gobierno",
+    "domestico":   "empleado domestico",
+    "cuenta":      "trabajador por cuenta propia",
+    "patron":      "patron o empleador",
+    "familiar":    "trabajador familiar sin remuneracion",
+    "jornalero":   "jornalero o peon",
+    "otro_pos":    "otro",
+}
+
+
+def parse_posicion(ruta: Path):
+    """Ocupados segun posicion ocupacional (CISE-93)."""
+    filas = cargar_hoja(ruta, "Ocupados 23 Ciudades_pos_Trim")
+    fila_hdr = next(i for i, f in enumerate(filas)
+                    if f and any(x and norm(x).startswith("ene - mar") for x in f[:4]))
+    col_ini = next(c for c, x in enumerate(filas[fila_hdr])
+                   if x and norm(x).startswith("ene - mar"))
+    n_per = contar_periodos(filas, fila_hdr, col_ini)
+    periodos = periodos_desde(ANCLA_POSICION, n_per)
+
+    bloques = detectar_bloques(filas, NOMBRES_CIUDAD)
+    datos = {}
+    for k, (fi, nombre) in enumerate(bloques):
+        ff = bloques[k + 1][0] if k + 1 < len(bloques) else len(filas)
+        b = indicadores_del_bloque(filas, fi, ff, MAPA_POSICION, n_per, col_ini)
+        if b:
+            datos[nombre] = b
+    print(f"  posicion ocup.: {len(datos)} ciudades x {n_per} trimestres moviles "
+          f"({periodos[0][1]} -> {periodos[-1][1]})")
+    return periodos, datos
 
 
 def _promediar(datos_tm, por_anio, anios, limite):
@@ -578,7 +674,8 @@ def _promediar(datos_tm, por_anio, anios, limite):
                            ("td", tasa(d.get("desocupados"), ft)),
                            ("ts", tasa(d.get("subocupados"), ft)),
                            ("pct_pet", tasa(pet, d.get("pob_total"))),
-                           ("prop_informalidad", tasa(d.get("informal"), oc))):
+                           ("prop_informalidad", tasa(d.get("informal"), oc)),
+                           ("pct_ffft", tasa(d.get("ffft"), pet))):
             if val:
                 d[clave] = val
 
@@ -675,13 +772,30 @@ def main():
     if tn:
         gen_tm["Total nacional"] = tn
         print("  total nacional: agregado al modulo general")
+    # La hoja del DANE no publica esta proporcion, pero si los dos niveles.
+    # Se deriva aqui, en el ETL, y no en el front: comparar el nivel absoluto
+    # de Cali contra el agregado de 13 ciudades no dice nada -- el agregado es
+    # diez veces mas grande y aplasta la serie de Cali contra el eje. La
+    # proporcion si es comparable entre ciudades.
+    for ciudad, ind in gen_tm.items():
+        ffft, pet = ind.get("ffft"), ind.get("pet")
+        if ffft and pet:
+            ind["pct_ffft"] = [round(f / p * 100, 2) if (f is not None and p) else None
+                               for f, p in zip(ffft, pet)]
+
     _, sexo_tm = parse_sexo(anexos["sexo"])
     _, jov_tm = parse_juventud(anexos["juventud"])
     per_inf, inf_tm = parse_informalidad(anexos["informalidad"])
+    per_ffft, ffft_tm = parse_fuera(anexos["general"])
+    per_pos, pos_tm = parse_posicion(anexos["general"])
     cod_tm = [p[0] for p in per_tm]
 
-    # informalidad reindexada a la grilla completa de trimestres moviles
+    # Los tres modulos que no arrancan en 2007 se reindexan a la grilla completa
+    # de trimestres moviles, rellenando con None el tramo que no existe. El
+    # front recorta solo ese tramo vacio inicial al dibujar.
     inf_alin = alinear(inf_tm, [p[0] for p in per_inf], cod_tm)
+    ffft_alin = alinear(ffft_tm, [p[0] for p in per_ffft], cod_tm)
+    pos_alin = alinear(pos_tm, [p[0] for p in per_pos], cod_tm)
 
     # --- promedio del anio ---
     per_an, gen_an, gen_ref, parciales, etq_ref = promedio_anual(per_tm, gen_tm)
@@ -689,11 +803,14 @@ def main():
     _, muj_an, muj_ref, _, _ = promedio_anual(per_tm, sexo_tm["mujeres"])
     _, jov_an, jov_ref, _, _ = promedio_anual(per_tm, jov_tm)
     _, inf_an, inf_ref, _, _ = promedio_anual(per_tm, inf_alin)
+    _, ffft_an, ffft_ref, _, _ = promedio_anual(per_tm, ffft_alin)
+    _, pos_an, pos_ref, _, _ = promedio_anual(per_tm, pos_alin)
     print(f"  promedio anual: {len(per_an)} anios "
           f"({per_an[0][1]} -> {per_an[-1][1]})"
           + (f"; parcial: {', '.join(map(str, parciales))}" if parciales else ""))
 
-    universo = set(gen_tm) | set(jov_tm) | set(inf_alin) | set(sexo_tm["mujeres"])
+    universo = (set(gen_tm) | set(jov_tm) | set(inf_alin)
+                | set(sexo_tm["mujeres"]) | set(ffft_alin) | set(pos_alin))
     ciudades = [c for c in ORDEN_CIUDADES if c in universo]
     ciudades += sorted(c for c in universo if c not in ciudades)
 
@@ -717,6 +834,8 @@ def main():
                 "recalculan a partir de esos niveles."
             ),
             "inicio_informalidad": per_inf[0][1],
+            "inicio_fuera": per_ffft[0][1],
+            "inicio_posicion": per_pos[0][1],
         },
         "ciudades": ciudades,
         "periodos": {"tm": indexar(per_tm),
@@ -728,6 +847,8 @@ def main():
                 "mujeres": sexo_tm["mujeres"],
                 "juventud": jov_tm,
                 "informalidad": inf_alin,
+                "fuera": ffft_alin,
+                "posicion": pos_alin,
             },
             "an": {
                 "general": gen_an,
@@ -735,12 +856,15 @@ def main():
                 "mujeres": muj_an,
                 "juventud": jov_an,
                 "informalidad": inf_an,
+                "fuera": ffft_an,
+                "posicion": pos_an,
             },
         },
         # Mismo tramo del anio anterior: hace comparable un anio en curso
         "referencia_anual": {
             "general": gen_ref, "hombres": hom_ref, "mujeres": muj_ref,
             "juventud": jov_ref, "informalidad": inf_ref,
+            "fuera": ffft_ref, "posicion": pos_ref,
         },
     }
 

@@ -260,6 +260,16 @@ main{padding:26px 26px 60px}
 .desc-fila:hover .flecha{color:var(--azul-pacifico)}
 @media(max-width:760px){.desc-fila{padding:9px 11px;gap:9px}}
 .leyenda span{display:inline-flex;align-items:center;gap:6px}
+/* Detalle del reparto de posición ocupacional */
+.reparto{margin-top:11px;display:grid;gap:5px;font-size:12.5px}
+.reparto div{display:grid;grid-template-columns:11px 1fr auto auto;align-items:center;gap:9px}
+.reparto i{width:9px;height:9px;border-radius:3px;display:block}
+.reparto .rp-n{color:var(--tinta-2);min-width:0}
+.reparto .rp-v{font-weight:700;color:var(--azul-sereno);font-variant-numeric:tabular-nums}
+.reparto .rp-p{color:var(--tinta-3);font-variant-numeric:tabular-nums;min-width:64px;text-align:right}
+#tip .tip-det{margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,.22);
+  font-size:11.5px;line-height:1.55;color:var(--azul-farallones)}
+@media(max-width:760px){.reparto .rp-p{display:none}}
 .leyenda i{width:16px;height:3.5px;border-radius:999px;display:inline-block}
 .nota{font-size:11.5px;color:var(--tinta-3);margin-top:9px;line-height:1.5}
 svg.gr{display:block;width:100%;height:auto;overflow:visible}
@@ -399,6 +409,7 @@ const SECCIONES = [
   {id:"genero",    nom:"Brechas de género",   tema:"magenta",    desc:"Indicadores laborales desagregados por sexo y brechas entre hombres y mujeres"},
   {id:"informal",  nom:"Informalidad",        tema:"chontaduro", desc:"Proporción y composición del empleo informal desde 2021"},
   {id:"juventud",  nom:"Juventud",            tema:"violeta",    desc:"Mercado laboral de la población entre 15 y 28 años"},
+  {id:"fuera",     nom:"Fuera de la fuerza de trabajo",tema:"feijo", desc:"Población en edad de trabajar que no busca empleo ni lo tiene"},
   {id:"ciudades",  nom:"Comparativo ciudades",tema:"viche",      desc:"Cali A.M. frente a las 23 ciudades y áreas metropolitanas"},
   {id:"datos",     nom:"Fuentes y metodología",tema:"azul",       desc:"Origen de los datos, definiciones y advertencias de lectura"},
 ];
@@ -431,11 +442,45 @@ const ETQ = {
   prop_informalidad:"Proporción de informalidad", formal:"Ocupados formales",
   informal:"Ocupados informales", pct_ffft:"% fuera de la fuerza de trabajo",
   pet_joven:"Jóvenes en edad de trabajar",
+  /* Fuera de la fuerza de trabajo, por tipo de actividad */
+  estudiando:"Estudiando", hogar:"En oficios del hogar", otros_ffft:"Otras actividades",
+  /* Posición ocupacional (CISE-93) */
+  particular:"Obrero, empleado particular", gobierno:"Obrero, empleado del gobierno",
+  domestico:"Empleado doméstico", cuenta:"Trabajador por cuenta propia",
+  patron:"Patrón o empleador", familiar:"Trabajador familiar sin remuneración",
+  jornalero:"Jornalero o peón", otro_pos:"Otra posición ocupacional",
 };
 const SIGLAS = {td:"TD", to:"TO", tgp:"TGP", ts:"TS", prop_informalidad:"Informalidad"};
+
+/* Posición ocupacional (CISE-93). En la gráfica se muestran tres grupos: las
+   dos posiciones que concentran el empleo y un "Otros" con las demás. En el
+   tooltip sí se desagregan todas, porque el detalle importa cuando alguien se
+   detiene a mirarlo. */
+const POSICIONES = [
+  {k:"particular", nom:"Obrero, empleado particular",          color:"#253D90", propio:true},
+  {k:"cuenta",     nom:"Trabajador por cuenta propia",         color:"#F2661F", propio:true},
+  {k:"gobierno",   nom:"Obrero, empleado del gobierno",        color:"#90CEFF"},
+  {k:"domestico",  nom:"Empleado doméstico",                   color:"#90CEFF"},
+  {k:"patron",     nom:"Patrón o empleador",                   color:"#90CEFF"},
+  {k:"familiar",   nom:"Trabajador familiar sin remuneración", color:"#90CEFF"},
+  {k:"jornalero",  nom:"Jornalero o peón",                     color:"#90CEFF"},
+  {k:"otro_pos",   nom:"Otro",                                 color:"#90CEFF"},
+];
+const POS_OTROS = POSICIONES.filter(x=>!x.propio);
 const ES_TASA = k => ["td","to","tgp","ts","pct_pet","prop_informalidad","pct_ffft"].includes(k);
 /* Indicadores donde subir es mala noticia */
-const SUBIR_ES_MALO = ["td","ts","prop_informalidad","desocupados","informal","pct_ffft"];
+const SUBIR_ES_MALO = ["td","ts","prop_informalidad","desocupados","informal","pct_ffft",
+  /* La población fuera de la fuerza de trabajo es el reverso de la
+     participación: si la TGP subiendo es buena señal, esta subiendo es mala.
+     Es el mismo criterio que ya se aplicaba a pct_ffft. */
+  "ffft"];
+
+/* Indicadores donde subir no es ni bueno ni malo, y el tablero no debería
+   fingir que sí. Son repartos internos: que más gente fuera de la fuerza de
+   trabajo esté estudiando en vez de en oficios del hogar no se lee igual que
+   una tasa de desempleo, y ponerle un color de juicio sería editorializar.
+   Se muestran con la variación, pero en tono neutro. */
+const SIN_JUICIO = ["estudiando","hogar","otros_ffft"];
 
 const ANUAL = () => modo==="an";
 let D=null, modo="tm", iPer=0, desdeAnio=2007, comparar=["Total 13 ciudades y A.M.","Bogota D.C.","Medellin A.M."], activa="resumen";
@@ -692,6 +737,46 @@ function anillo(cont,{partes,alto=228,etiquetaCentro="personas"}){
   cont.appendChild(svg);
 }
 
+/* ── Reparto en una barra ──────────────────────────────────────
+   Una sola barra al 100% con las partes ordenadas de mayor a menor, y debajo
+   el detalle. Sirve para repartos de pocas categorias donde lo que importa es
+   el peso relativo, no el nivel: la barra ya dice "esto es el total".
+   Una parte puede traer `detalle`, y entonces el tooltip la desglosa.      */
+function barrasReparto(cont,{partes,total}){
+  cont.innerHTML="";
+  const orden=[...partes].sort((a,b)=>b.v-a.v);
+  const W=Math.max(300,Math.round(cont.clientWidth||420)), fh=40, H=fh+8;
+  const svg=el("svg",{class:"gr",viewBox:`0 0 ${W} ${H}`,role:"img"}); svg.style.height=H+"px";
+  let x=0;
+  orden.forEach(pt=>{
+    const w=Math.max(2,pt.v/total*W);
+    const g=el("g");
+    /* rx acotado a la mitad del ancho para que un segmento angosto no se
+       convierta en una pastilla deforme */
+    g.appendChild(el("rect",{x,y:4,width:w,height:fh,rx:Math.min(9,w/2),fill:pt.color}));
+    if(w>70){
+      const claro=pt.color==="#90CEFF";
+      const t=el("text",{x:x+11,y:4+fh/2+4,"font-size":12,"font-weight":700,
+                         fill:claro?"#12176B":"#fff"});
+      t.textContent=fmt1(pt.v/total*100)+"%"; g.appendChild(t);
+    }
+    g.addEventListener("pointermove",e=>verTip(
+      `<b>${esc(pt.nombre)}</b>${pers(pt.v)} personas · ${fmt1(pt.v/total*100)}%`+
+      (pt.detalle?`<div class="tip-det">${pt.detalle.join("<br>")}</div>`:""),e));
+    g.addEventListener("pointerleave",ocultarTip);
+    svg.appendChild(g); x+=w;
+  });
+  cont.appendChild(svg);
+  const ul=document.createElement("div");
+  ul.className="reparto";
+  ul.innerHTML=orden.map(pt=>
+    `<div><i style="background:${pt.color}"></i>
+       <span class="rp-n">${esc(pt.nombre)}</span>
+       <span class="rp-v">${fmt1(pt.v/total*100)}%</span>
+       <span class="rp-p">${pers(pt.v)}</span></div>`).join("");
+  cont.appendChild(ul);
+}
+
 /* ── Cascada de la población ───────────────────────────────────
    Un desocupado son 114 mil frente a 1,9 millones en edad de trabajar:
    en una barra común desaparece. Aquí cada nivel se reparte sobre el
@@ -798,9 +883,10 @@ function kpi({t,k,mod="general",ciudad=FOCO,nota}){
                   : s[iAnterior()];
   const d=(v!=null&&p!=null)?v-p:null;
   const malo=SUBIR_ES_MALO.includes(k);
+  const neutro=SIN_JUICIO.includes(k);
   let cls="plana", flecha="";
   if(d!=null&&Math.abs(d)>=0.05){ const sube=d>0; flecha=sube?"▲":"▼";
-    cls=(sube===malo)?"sube":"baja"; }
+    cls=neutro?"neutra":(sube===malo)?"sube":"baja"; }
   const txt=d==null?"sin comparable":(ES_TASA(k)
       ? `${flecha} ${fmt1(Math.abs(d))} pp`
       : `${flecha} ${fmt1(Math.abs(d/(p||1)*100))}%`);
@@ -909,8 +995,8 @@ V.resumen=()=>{
     ${hayInf?kpi({k:"prop_informalidad",t:"Informalidad",mod:"informalidad"}):kpi({k:"ts",t:"Subocupación"})}
   </div>
   <div class="grid g-23">
-    ${panel("Desempleo en Cali A.M.","Serie comparativa · "+(ANUAL()?"promedio anual":"trimestre móvil"),
-      `<div id="g-res-td"></div>`)}
+    ${panel("Las tres tasas de Cali A.M.","Desempleo, ocupación y participación",
+      `<div id="g-res-tasas"></div><div id="l-res-tasas"></div>`)}
     ${panel("Composición de la fuerza de trabajo","Cali A.M. · "+p,`<div id="g-res-anillo"></div><div id="l-res-anillo"></div>`)}
   </div>
   <div class="grid g-3">
@@ -923,7 +1009,14 @@ V.resumen=()=>{
   </div>`;
 };
 V.resumen.pintar=()=>{
-  pintarComparativa("g-res-td","general","td","%");
+  /* Sin subocupación: es de segundo orden y las tres principales ya dan la
+     foto completa. La comparativa entre ciudades vive en Panorama general. */
+  const tasas=[{nombre:"Tasa de desempleo",color:"#F2661F",k:"td"},
+               {nombre:"Tasa de ocupación",color:"#253D90",k:"to"},
+               {nombre:"Participación (TGP)",color:"#6FBCFF",k:"tgp"}];
+  pintarLineas("g-res-tasas",tasas.map(t=>({
+    nombre:t.nombre,color:t.color,grueso:2.4,datos:serieRango("general",FOCO,t.k)})),{alto:272});
+  document.getElementById("l-res-tasas").innerHTML=leyenda(tasas);
 
   const oc=S("general",FOCO,"ocupados")?.[iPer], de=S("general",FOCO,"desocupados")?.[iPer];
   const su=S("general",FOCO,"subocupados")?.[iPer];
@@ -1041,6 +1134,13 @@ V.informal=()=>`
     ${panel("Proporción de informalidad","Comparativa entre ciudades",`<div id="g-inf-prop"></div><div id="l-inf"></div>`)}
     ${panel("Formales e informales","Cali A.M. · composición del empleo",`<div id="g-inf-comp"></div><div id="l-inf-comp"></div>`)}
   </div>
+  <div class="grid g-23">
+    ${panel("Posición ocupacional","Cali A.M. · composición de los ocupados",
+      `<div id="g-inf-pos"></div><div id="l-inf-pos"></div>`)}
+    ${panel("Posición ocupacional hoy",`Cali A.M. · ${P().etiquetas[iPer]}`,
+      `<div id="g-inf-pos-hoy"></div>`,"",
+      "El trabajo por cuenta propia es la posición que más pesa en la informalidad.")}
+  </div>
   <div class="grid">
     ${panel("Informalidad entre ciudades",`23 ciudades y áreas metropolitanas · ${P().etiquetas[iPer]}`,`<div id="g-inf-rank"></div>`,"",
       "La serie de informalidad del DANE arranca en el primer trimestre de 2021 por el cambio metodológico de la GEIH.")}
@@ -1059,7 +1159,46 @@ V.informal.pintar=()=>{
   document.getElementById("l-inf-comp").innerHTML=leyenda(caps);
   const items=D.ciudades.filter(c=>!/^Total/.test(c)).map(c=>({nombre:c,v:S("informalidad",c,"prop_informalidad")?.[iPer]}));
   barras(document.getElementById("g-inf-rank"),{items,unidad:"%",color:"#BDE0FF"});
+  pintarPosicion();
 };
+
+/* Posición ocupacional: composición en el tiempo y reparto del período.
+   Las cinco posiciones menores se suman en "Otros" -- en Cali pesan 9,6% y por
+   separado no se distinguirían -- pero el tooltip del reparto las desagrega. */
+function pintarPosicion(){
+  const cont=document.getElementById("g-inf-pos"); if(!cont) return;
+  const [i0,i1]=rango();
+  const serie=k=>(S("posicion",FOCO,k)||[]).slice(i0,i1+1);
+  const sumaOtros=()=>{
+    const cols=POS_OTROS.map(x=>serie(x.k));
+    return cols[0].map((_,i)=>{
+      const vs=cols.map(c=>c[i]).filter(v=>v!=null);
+      return vs.length?vs.reduce((a,b)=>a+b,0):null;
+    });
+  };
+  const caps=[{nombre:"Obrero, empleado particular",color:"#253D90",datos:serie("particular")},
+              {nombre:"Trabajador por cuenta propia",color:"#F2661F",datos:serie("cuenta")},
+              {nombre:"Otros",color:"#90CEFF",datos:sumaOtros()}];
+  const rc=recortar(caps,etiquetasRango(),cortasRango());
+  if(!rc.etiquetas.length){ cont.innerHTML='<p class="nota">Sin datos para el período seleccionado.</p>'; return; }
+  const paso=Math.max(1,Math.ceil(rc.etiquetas.length/26));
+  apiladas(cont,{etiquetas:rc.cortas.filter((_,i)=>i%paso===0),
+    capas:rc.series.map(c=>({...c,datos:c.datos.filter((_,i)=>i%paso===0)}))});
+  document.getElementById("l-inf-pos").innerHTML=leyenda(caps);
+
+  /* Reparto del período elegido, con las siete posiciones en el tooltip */
+  const oc=S("posicion",FOCO,"ocupados")?.[iPer];
+  const cont2=document.getElementById("g-inf-pos-hoy"); if(!cont2) return;
+  if(oc==null){ cont2.innerHTML='<p class="nota">Sin datos para el período seleccionado.</p>'; return; }
+  const otros=POS_OTROS.map(x=>({...x,v:S("posicion",FOCO,x.k)?.[iPer]})).filter(x=>x.v!=null);
+  const partes=[
+    {nombre:"Obrero, empleado particular",v:S("posicion",FOCO,"particular")?.[iPer],color:"#253D90"},
+    {nombre:"Trabajador por cuenta propia",v:S("posicion",FOCO,"cuenta")?.[iPer],color:"#F2661F"},
+    {nombre:"Otros",v:otros.reduce((a,b)=>a+b.v,0),color:"#90CEFF",
+     detalle:otros.sort((a,b)=>b.v-a.v).map(x=>`${esc(x.nom)}: ${fmt1(x.v/oc*100)}%`)},
+  ].filter(x=>x.v!=null);
+  barrasReparto(cont2,{partes,total:oc});
+}
 
 V.juventud=()=>`
   ${cabecera("juventud")}
@@ -1090,6 +1229,67 @@ V.juventud.pintar=()=>{
   document.getElementById("l-juv-vs").innerHTML=leyenda(caps);
   const items=D.ciudades.filter(c=>!/^Total/.test(c)).map(c=>({nombre:c,v:S("juventud",c,"td")?.[iPer]}));
   barras(document.getElementById("g-juv-rank"),{items,unidad:"%",color:"#BDE0FF"});
+};
+
+/* Actividades de quien está fuera de la fuerza de trabajo. El anexo solo trae
+   13 ciudades, no 23, así que aquí la comparación es contra ese agregado y las
+   ciudades que faltan simplemente no tienen serie. */
+const ACTIVIDADES = [
+  {k:"hogar",      nom:"Oficios del hogar", color:"#1D846E"},
+  {k:"estudiando", nom:"Estudiando",        color:"#41C0A0"},
+  {k:"otros_ffft", nom:"Otros",             color:"#A4EBD4"},
+];
+
+V.fuera=()=>`
+  ${cabecera("fuera")}
+  <div class="kpis">
+    ${kpi({k:"ffft",t:"Fuera de la fuerza de trabajo",mod:"fuera"})}
+    ${kpi({k:"pct_ffft",t:"Sobre la población en edad de trabajar"})}
+    ${kpi({k:"hogar",t:"En oficios del hogar",mod:"fuera"})}
+    ${kpi({k:"estudiando",t:"Estudiando",mod:"fuera"})}
+    ${kpi({k:"otros_ffft",t:"Otras actividades",mod:"fuera"})}
+  </div>
+  <div class="grid g-23">
+    ${panel("Proporción fuera de la fuerza de trabajo","Sobre la población en edad de trabajar · comparativa entre ciudades",
+      `<div id="g-ffft-tot"></div><div id="l-ffft"></div>`)}
+    ${panel("En qué se ocupa ese tiempo",`Cali A.M. · ${P().etiquetas[iPer]}`,
+      `<div id="g-ffft-hoy"></div>`,"",
+      "Oficios del hogar recae de forma muy desigual entre hombres y mujeres: la sección de brechas de género lo muestra por el otro lado, el de quienes sí participan.")}
+  </div>
+  <div class="grid">
+    ${panel("Composición a lo largo del tiempo","Cali A.M. · por tipo de actividad",
+      `<div id="g-ffft-comp"></div><div id="l-ffft-comp"></div>`,"",
+      "La serie de esta hoja del DANE arranca en 2010, no en 2007 como el resto del tablero.")}
+  </div>`;
+
+V.fuera.pintar=()=>{
+  /* Se compara la proporción, no el nivel: el agregado de 13 ciudades es diez
+     veces Cali y en niveles la aplasta contra el eje. Sale del módulo general,
+     que tiene las 23 ciudades; el desglose por actividad, que es lo que aporta
+     esta hoja, solo existe para 13. */
+  pintarComparativa("g-ffft-tot","general","pct_ffft","%");
+  document.getElementById("l-ffft").innerHTML=
+    leyenda(ciudadesActivas("general").map(c=>({nombre:c,color:colorCiudad(c)})));
+
+  const tot=S("fuera",FOCO,"ffft")?.[iPer];
+  const cont=document.getElementById("g-ffft-hoy");
+  if(tot==null){ cont.innerHTML='<p class="nota">Sin datos para el período seleccionado.</p>'; }
+  else {
+    const partes=ACTIVIDADES.map(a=>({nombre:a.nom,v:S("fuera",FOCO,a.k)?.[iPer],color:a.color}))
+                            .filter(x=>x.v!=null);
+    barrasReparto(cont,{partes,total:tot});
+  }
+
+  const [i0,i1]=rango();
+  const caps=ACTIVIDADES.map(a=>({nombre:a.nom,color:a.color,
+    datos:(S("fuera",FOCO,a.k)||[]).slice(i0,i1+1)}));
+  const rc=recortar(caps,etiquetasRango(),cortasRango());
+  const c2=document.getElementById("g-ffft-comp");
+  if(!rc.etiquetas.length){ c2.innerHTML='<p class="nota">Sin datos para el período seleccionado.</p>'; return; }
+  const paso=Math.max(1,Math.ceil(rc.etiquetas.length/30));
+  apiladas(c2,{etiquetas:rc.cortas.filter((_,i)=>i%paso===0),
+    capas:rc.series.map(c=>({...c,datos:c.datos.filter((_,i)=>i%paso===0)})),alto:270});
+  document.getElementById("l-ffft-comp").innerHTML=leyenda(caps);
 };
 
 V.ciudades=()=>{
@@ -1290,7 +1490,7 @@ function pintarPeriodos(){
 
 /* ═══ Descarga CSV ═════════════════════════════════════════════ */
 function descargarCSV(){
-  const p=P(), mods=["general","hombres","mujeres","juventud","informalidad"];
+  const p=P(), mods=["general","hombres","mujeres","juventud","informalidad","fuera","posicion"];
   const filas=[["ciudad","modulo","indicador","periodo","valor","unidad"]];
   [FOCO,...comparar].forEach(c=>mods.forEach(m=>{
     const ind=D.series[modo][m]?.[c]; if(!ind) return;
