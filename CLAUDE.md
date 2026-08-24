@@ -383,7 +383,17 @@ Ordenado por lo que más aporta primero.
    Slides: 1-2 logo, 3 morfologías para enmascarar, 4 morfologías para decorar,
    5-7 íconos, 8 íconos de redes.
 
-### Publicación y automatización
+### Publicación
+
+**No hay trabajo de incrustación.** Se verificó la página del Visor de Datos de
+la CCC (`ccc.org.co/informacion-y-estudios-economicos/visor-de-datos/`) y **no
+incrusta tableros**: es una lista de botones que abren enlaces externos. Los
+visores actuales viven en `app.powerbi.com` y `public.tableau.com`, y el único
+`iframe` de la página es un video de YouTube.
+
+Eso simplifica todo. El tablero vive en su propia URL y desde la página de la
+CCC se enlaza, igual que los demás visores. No hace falta el script de
+`postMessage` para la altura del `iframe` que se había previsto.
 
 2. **Dejar andando GitHub Pages.** El workflow ya está completo (cron diario,
    descarga, ETL, verificación, *issue* al fallar), pero falta el paso manual
@@ -391,28 +401,61 @@ Ordenado por lo que más aporta primero.
    elegir **GitHub Actions** como origen. Hasta que alguien haga eso, el
    workflow corre y falla en el último paso.
 
-3. **Ayudar a incrustarlo en WordPress.** El `iframe` de altura fija es
-   incómodo. Vale la pena un pequeño script `postMessage` que le informe al
-   contenedor la altura real, con instrucciones para el equipo de web. En
-   celular conviene ofrecer el enlace directo en vez del `iframe`.
+   Publica en `https://blasco2001.github.io/Tablero-mercado-laboral/`.
+
+3. **Activar el subdominio propio**, `observatoriolaboral.ccc.org.co`.
+
+   **El orden importa y hacerlo al revés tumba el sitio.** Con un archivo
+   `CNAME` presente, GitHub Pages redirige `blasco2001.github.io` al dominio
+   propio; si el DNS todavía no resuelve, el tablero queda inalcanzable por
+   las dos rutas. Por eso el archivo está preparado como
+   `docs/CNAME.pendiente` y **no** como `docs/CNAME`.
+
+   La secuencia:
+
+   1. Dejar andando Pages (punto 2) y comprobar que el tablero abre en la URL
+      de `github.io`.
+   2. Pedirle a TI de la CCC este registro DNS:
+
+      ```
+      Tipo    CNAME
+      Nombre  observatoriolaboral
+      Valor   blasco2001.github.io
+      TTL     3600
+      ```
+
+   3. Cuando `dig observatoriolaboral.ccc.org.co` responda, y solo entonces:
+
+      ```bash
+      git mv docs/CNAME.pendiente docs/CNAME
+      git commit -m "Activar el subdominio observatoriolaboral.ccc.org.co"
+      git push
+      ```
+
+   4. En Settings -> Pages, marcar **Enforce HTTPS** cuando GitHub termine de
+      emitir el certificado (tarda unos minutos).
+
+4. **Pasarle al equipo de web el texto del botón.** Redactado y listo en
+   `BOTON-VISOR.md`, siguiendo el estilo de los que ya están en esa
+   página. Falta mandárselo cuando la URL definitiva esté en pie.
 
 ### Calidad
 
-4. **Accesibilidad.** Las gráficas SVG necesitan `<title>` y `aria-label`
+5. **Accesibilidad.** Las gráficas SVG necesitan `<title>` y `aria-label`
    descriptivos, y una alternativa en tabla para lectores de pantalla. Revisar
    contraste de los textos secundarios sobre blanco maceta.
 
-5. **Metadatos.** `og:image`, `og:description`, favicon con el isotipo. Cuando
+6. **Metadatos.** `og:image`, `og:description`, favicon con el isotipo. Cuando
    alguien comparta el enlace en LinkedIn o WhatsApp, tiene que verse la marca.
 
-6. **Peso.** `datos.json` pesa 1,75 MB (unos 400 KB comprimido). Se puede
+7. **Peso.** `datos.json` pesa 1,75 MB (unos 400 KB comprimido). Se puede
    bajar bastante separando el archivo por módulo y cargando bajo demanda, o
    recortando la precisión de los niveles. No es urgente, pero en conexiones
    lentas se nota.
 
 ### Referencia de diseño
 
-7. **Revisar el monitor de la Secretaría de Desarrollo Económico de Bogotá**
+8. **Revisar el monitor de la Secretaría de Desarrollo Económico de Bogotá**
    (`https://observatorio.desarrolloeconomico.gov.co/monitor-mercado-laboral-en-cifras/`),
    que es la referencia que pidió el cliente. Extraer ideas de estructura y
    navegación, no de estética: la identidad visual acá es la de la CCC.
