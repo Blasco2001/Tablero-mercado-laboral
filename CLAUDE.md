@@ -27,10 +27,12 @@ competir por el protagonismo. Cualquier vista nueva debe responder primero
 ## Cómo está armado
 
 ```
+descargar.py                 Trae los anexos del DANE -> datos/
 etl.py                       Lee los anexos del DANE -> docs/datos.json
 verificar.py                 Pruebas de regresión sobre datos.json
 construir_archivo_unico.py   Arma tablero-completo.html (versión portátil)
 datos/                       Los cuatro anexos .xlsx del DANE
+  historial.csv              Rastro auditable: sha256 y URL de cada descarga
 docs/                        Lo que se publica
   index.html                 El tablero entero: HTML + CSS + JS en un archivo
   datos.json                 Generado por etl.py. No se edita a mano.
@@ -41,13 +43,19 @@ tablero-completo.html        Versión de un solo archivo, abre con doble clic
 .github/workflows/           Construye y publica en GitHub Pages
 ```
 
-Ciclo mensual completo:
+Ciclo mensual completo. **Normalmente no hay que correrlo**: el workflow lo
+hace solo todos los días. Esto es para trabajar en local o para reconstruir a
+mano si algo falló:
 
 ```bash
-python etl.py                       # procesa los anexos nuevos
+python descargar.py                 # busca anexos nuevos en el DANE
+python etl.py                       # los procesa
 python verificar.py                 # confirma que nada se rompió
 python construir_archivo_unico.py   # opcional: copia portátil
 ```
+
+`descargar.py` sale con código 2 cuando no hay nada nuevo, que es lo normal
+casi todos los días.
 
 ### Sin dependencias
 
@@ -207,58 +215,117 @@ acordarse de hacerlo**, y quedar publicado en el sitio de la CCC.
 
 ### Dónde está hoy
 
-Semiautomático. El robot construye y publica solo, pero **una persona todavía
-tiene que descargar los cuatro anexos del DANE y hacer commit**. Si esa persona
-sale de vacaciones, el tablero se congela.
+Cerrado. `descargar.py` trae los cuatro anexos del DANE y el workflow corre
+solo todos los días a las 9 de la mañana. Nadie tiene que acordarse de nada.
 
 ```
-[persona] descarga 4 .xlsx  ->  commit  ->  [robot] ETL + verificar + publicar
-   ^^^^^^^^ este eslabón es el que falta cerrar
+[cron diario] -> descargar.py -> etl.py -> verificar.py -> GitHub Pages
+                      |              |          |
+                   nada nuevo?    falla?     falla?
+                    termina       issue      issue, NO publica
 ```
 
-### Cómo cerrarlo
+### Las URLs del DANE
 
-Las URLs del DANE son predecibles. El anexo general vive en:
+Los cuatro patrones están **comprobados contra el portal**, no supuestos:
 
 ```
-https://www.dane.gov.co/files/operaciones/GEIH/anex-GEIH-{mes}{anio}.xlsx
+general        anex-GEIH-{mes}{anio}.xlsx              anex-GEIH-jun2026.xlsx
+informalidad   anex-GEIHEISS-{trimestre}.xlsx          anex-GEIHEISS-abr-jun2026.xlsx
+sexo           anex-GEIHMLS-{trimestre}.xlsx           anex-GEIHMLS-abr-jun2026.xlsx
+juventud       anex-GEIHMLJ-{trimestre}.xlsx           anex-GEIHMLJ-abr-jun2026.xlsx
 ```
 
-con `mes` en `ene feb mar abr may jun jul ago sep oct nov dic`. Por ejemplo
-`anex-GEIH-jun2026.xlsx`. Ese patrón se mantiene estable desde abril de 2023.
-Antes de esa fecha vivían en otra ruta y con otro nombre, lo cual es
-exactamente la razón para no confiar ciegamente en el patrón.
+Todos cuelgan de `https://www.dane.gov.co/files/operaciones/GEIH/`. Ojo con
+tres cosas que no se adivinan:
 
-Los otros tres anexos (EISS, MLS, MLJ) se publican en sus propias páginas
-dentro del mismo portal y hay que verificar su patrón antes de automatizarlos.
+1. **No hay guion entre `GEIH` y el módulo.** Es `anex-GEIHEISS-`, no
+   `anex-GEIH-EISS-`. Esa segunda forma da 404.
 
-**Diseño propuesto para `descargar.py`:**
+2. **El general se nombra por el mes de cierre; los otros tres, por el
+   trimestre completo.** El mismo período es `jun2026` para uno y
+   `abr-jun2026` para los otros.
 
-1. Intenta la URL predecible del mes objetivo.
-2. Si devuelve 404, busca el enlace en la página del DANE (es HTML plano, se
-   puede leer con `urllib` + expresión regular sobre los `href` que terminen
-   en `.xlsx`).
-3. Si tampoco aparece, **no falla ruidosamente ni publica nada**: sale con un
-   código que el workflow interpreta como "todavía no está disponible".
-4. Compara el contenido descargado con el que ya está en `datos/`. Si es igual,
-   termina sin hacer nada.
-5. Solo si hay archivos nuevos, sigue el ETL.
+3. **Cuando el trimestre cruza el fin de año, cada extremo carga el suyo.**
 
-**Cadencia:** el DANE publica el mercado laboral alrededor del día 30 del mes
-siguiente, pero la fecha exacta se mueve. Un `cron` diario que casi siempre no
-encuentra nada nuevo es más confiable que uno mensual que puede caer el día
-equivocado. Algo como `0 14 * * *` (9 de la mañana en Colombia).
+   ```
+   abr-jun2026        mismo año
+   dic2025-feb2026    a caballo entre dos años
+   dic-feb2026        ← 404. Es la forma que uno escribiría por analogía.
+   ```
+
+   Esto muerde tres meses al año: los trimestres que cierran en enero, febrero
+   y marzo. `nombre_esperado()` en `descargar.py` lo maneja, y hay una prueba
+   que lo cubre.
+
+El patrón se mantiene estable desde abril de 2023; antes vivían en otra ruta y
+con otro nombre. Por eso `descargar.py` no confía solo en el patrón: si la URL
+directa da 404, lee la página del módulo y saca el enlace de ahí. Cuidado al
+tocar ese respaldo, porque en las mismas páginas cuelgan el anexo
+desestacionalizado, los de RELAB y el de economía creativa, que este tablero no
+usa; el filtro por prefijo exacto es lo que los deja fuera.
+
+### Por qué espera a que estén los cuatro
+
+`descargar.py` no actualiza nada hasta que los cuatro módulos existen **para el
+mismo mes de cierre**. No es prudencia de más:
+
+El módulo general fija la grilla de períodos del ETL (`cod_tm`). Informalidad
+se realinea con `alinear()`, pero **sexo y juventud se leen sin realinear**. Si
+uno llega un mes tarde, sus series quedan más cortas que la grilla y
+`verificar.py` lo tumba con "todas las series miden lo mismo que la grilla".
+
+Es decir: la red de seguridad funciona, pero saltaría en falso cada mes que el
+DANE se desacompase. Antes que enseñar a ignorar una alarma roja, se espera.
+
+### Los códigos de salida son la interfaz
+
+`descargar.py` le habla al workflow por el código de salida. No son adorno:
+
+| código | significa | qué hace el workflow |
+|--------|-----------|----------------------|
+| `0` | hay anexos nuevos | ETL, verificar, comitear, publicar |
+| `2` | nada que hacer: el DANE no ha publicado, o ya estamos al día | termina en silencio |
+| `1` | error de verdad | abre un *issue*, no publica |
+
+Un corte de red devuelve `2`, no `1`. Un cron diario contra un portal público
+se va a topar con caídas, y una caída no es motivo para despertar a nadie:
+mañana lo vuelve a intentar. Lo que sí devuelve `1` es un archivo corrupto —
+cuando el portal está en mantenimiento contesta una página de error con código
+200 y extensión `.xlsx`, y esa página **no** puede entrar a `datos/`. Por eso
+se comprueba que cada descarga sea un ZIP con un `xl/` adentro.
 
 **La regla que no se negocia:** si `verificar.py` falla, el flujo **no
 publica**. Es preferible que el sitio muestre las cifras del mes pasado a que
-muestre cifras equivocadas con el logo de la Cámara encima. En ese caso el
-workflow debe abrir un *issue* o mandar un correo, no seguir de largo.
+muestre cifras equivocadas con el logo de la Cámara encima. El workflow abre un
+*issue* (y comenta en el que ya esté abierto, en vez de abrir uno nuevo cada
+día).
 
-**Qué hacer con los .xlsx descargados.** Dos opciones: comitearlos al repo
-(deja rastro auditable de qué archivo produjo qué cifra, pero engorda el
-historial ~14 MB al año) o procesarlos al vuelo sin guardarlos. Para una
-entidad que cita cifras públicamente, la trazabilidad pesa más. Guardar solo
-los del último mes y el hash de los anteriores es un punto medio razonable.
+### Qué queda de los .xlsx descargados
+
+Se comitean. Para una entidad que cita cifras públicamente la trazabilidad pesa
+más que los ~14 MB al año de historial.
+
+Además `datos/historial.csv` guarda un renglón por descarga con fecha, cierre,
+módulo, nombre, **sha256 y URL de origen**. Con eso se puede volver a bajar el
+archivo meses después y comprobar que es exactamente el que produjo las cifras
+publicadas.
+
+Si algún día el historial pesa demasiado, el `historial.csv` es lo que permite
+dejar de comitear los `.xlsx` sin perder la auditoría.
+
+### Certificados
+
+`descargar.py` usa `certifi` **solo si el Python que lo corre no trae almacén
+de certificados** (`ssl.get_default_verify_paths().cafile` es `None`, que pasa
+en algunos Python de macOS). En Linux, que es donde corre el workflow, no hace
+falta y no se usa. Nunca se apaga la verificación: da lo mismo que sean cifras
+públicas, bajarlas sin verificar el certificado sería confiar en cualquiera que
+se meta en medio.
+
+Si en tu máquina toda descarga falla con `self-signed certificate in
+certificate chain`, no es el DANE: es tu Python. Se arregla con
+`pip install certifi`.
 
 ### Nombres de archivo
 
@@ -293,41 +360,39 @@ Ordenado por lo que más aporta primero.
 
 ### Publicación y automatización
 
-3. **Cerrar el ciclo con `descargar.py`**, según el diseño de la sección
-   anterior. Es lo que convierte el tablero en algo vivo. Empezar por el anexo
-   general, que tiene el patrón confirmado, y después verificar los otros tres.
+3. **Dejar andando GitHub Pages.** El workflow ya está completo (cron diario,
+   descarga, ETL, verificación, *issue* al fallar), pero falta el paso manual
+   que nadie puede automatizar: entrar a Settings -> Pages del repositorio y
+   elegir **GitHub Actions** como origen. Hasta que alguien haga eso, el
+   workflow corre y falla en el último paso.
 
-4. **Dejar andando GitHub Pages** con el workflow que ya está en
-   `.github/workflows/publicar.yml`. Agregarle el `cron` diario y el paso de
-   descarga, y hacer que abra un *issue* cuando algo falle.
-
-5. **Ayudar a incrustarlo en WordPress.** El `iframe` de altura fija es
+4. **Ayudar a incrustarlo en WordPress.** El `iframe` de altura fija es
    incómodo. Vale la pena un pequeño script `postMessage` que le informe al
    contenedor la altura real, con instrucciones para el equipo de web. En
    celular conviene ofrecer el enlace directo en vez del `iframe`.
 
-6. **Enlaces compartibles.** Que la sección, el modo temporal, el período y
+5. **Enlaces compartibles.** Que la sección, el modo temporal, el período y
    las ciudades comparadas queden en el hash de la URL. Es lo que permite
    mandar por correo "mira la informalidad de Cali en 2024" y que abra ahí.
    Importante para una entidad que cita cifras.
 
 ### Calidad
 
-7. **Accesibilidad.** Las gráficas SVG necesitan `<title>` y `aria-label`
+6. **Accesibilidad.** Las gráficas SVG necesitan `<title>` y `aria-label`
    descriptivos, y una alternativa en tabla para lectores de pantalla. Revisar
    contraste de los textos secundarios sobre blanco maceta.
 
-8. **Metadatos.** `og:image`, `og:description`, favicon con el isotipo. Cuando
+7. **Metadatos.** `og:image`, `og:description`, favicon con el isotipo. Cuando
    alguien comparta el enlace en LinkedIn o WhatsApp, tiene que verse la marca.
 
-9. **Peso.** `datos.json` pesa 1,75 MB (unos 400 KB comprimido). Se puede
+8. **Peso.** `datos.json` pesa 1,75 MB (unos 400 KB comprimido). Se puede
    bajar bastante separando el archivo por módulo y cargando bajo demanda, o
    recortando la precisión de los niveles. No es urgente, pero en conexiones
    lentas se nota.
 
 ### Referencia de diseño
 
-10. **Revisar el monitor de la Secretaría de Desarrollo Económico de Bogotá**
+9. **Revisar el monitor de la Secretaría de Desarrollo Económico de Bogotá**
    (`https://observatorio.desarrolloeconomico.gov.co/monitor-mercado-laboral-en-cifras/`),
    que es la referencia que pidió el cliente. Extraer ideas de estructura y
    navegación, no de estética: la identidad visual acá es la de la CCC.

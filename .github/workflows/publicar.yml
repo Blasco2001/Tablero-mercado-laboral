@@ -1,29 +1,47 @@
 name: Actualizar y publicar el tablero
 
-# Se dispara solo cuando cambian los anexos del DANE o el código del tablero.
-# El flujo completo del mes es: reemplazar los .xlsx en datos/ y hacer commit.
+# El ciclo completo del mes, sin que nadie tenga que acordarse:
+#
+#   [cron diario] -> descargar.py -> etl.py -> verificar.py -> Pages
+#                         |              |          |
+#                      nada nuevo?    falla?     falla?
+#                       termina       issue      issue, NO publica
+#
+# La cadencia es diaria a proposito. El DANE publica el mercado laboral
+# alrededor del dia 30 del mes siguiente, pero la fecha exacta se mueve. Un
+# cron diario que casi siempre no encuentra nada es mas confiable que uno
+# mensual que puede caer el dia equivocado.
 on:
+  schedule:
+    - cron: "0 14 * * *"   # 14:00 UTC = 9:00 en Colombia
   push:
     branches: [main]
     paths:
       - "datos/**"
+      - "descargar.py"
       - "etl.py"
-      - "docs/index.html"
       - "verificar.py"
+      - "docs/**"
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write   # para comitear los anexos nuevos
+  issues: write     # para avisar cuando algo se rompe
   pages: write
   id-token: write
 
+# Sin cancelar a medias: una corrida interrumpida entre el commit de los
+# anexos y la publicacion deja el repo diciendo una cosa y el sitio otra.
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   construir:
     runs-on: ubuntu-latest
+    outputs:
+      publicar: ${{ steps.decidir.outputs.publicar }}
+      cierre: ${{ steps.descargar.outputs.cierre }}
     steps:
       - uses: actions/checkout@v4
 
@@ -34,19 +52,83 @@ jobs:
       - name: Instalar dependencias
         run: pip install openpyxl
 
+      # No toca la red: comprueba que los nombres que se le piden al DANE
+      # siguen siendo los correctos, sobre todo los tres meses del anio en que
+      # el trimestre cruza el fin de anio y cambia de forma.
+      - name: Probar la logica de nombres
+        run: python descargar.py --probar
+
+      # descargar.py distingue tres desenlaces con el codigo de salida:
+      #   0 = hay anexos nuevos      2 = nada que hacer      1 = error real
+      # Por eso se captura en vez de dejar que falle el paso.
+      - name: Buscar anexos nuevos en el DANE
+        id: descargar
+        run: |
+          set +e
+          python descargar.py
+          codigo=$?
+          set -e
+          echo "codigo=$codigo" >> "$GITHUB_OUTPUT"
+          if [ -f datos/historial.csv ]; then
+            echo "cierre=$(tail -1 datos/historial.csv | cut -d';' -f2)" >> "$GITHUB_OUTPUT"
+          fi
+          if [ "$codigo" = "1" ]; then
+            echo "::error::descargar.py fallo de verdad. No se publica nada."
+            exit 1
+          fi
+          echo "descargar.py termino con codigo $codigo"
+
+      # Un push de codigo tiene que republicar aunque el DANE no haya sacado
+      # nada; el cron diario, en cambio, solo sigue si llegaron cifras nuevas.
+      - name: Decidir si hay algo que publicar
+        id: decidir
+        run: |
+          if [ "${{ github.event_name }}" != "schedule" ]; then
+            echo "publicar=si" >> "$GITHUB_OUTPUT"
+            echo "Disparado por ${{ github.event_name }}: se reconstruye y se publica."
+          elif [ "${{ steps.descargar.outputs.codigo }}" = "0" ]; then
+            echo "publicar=si" >> "$GITHUB_OUTPUT"
+            echo "Llegaron anexos nuevos: se reconstruye y se publica."
+          else
+            echo "publicar=no" >> "$GITHUB_OUTPUT"
+            echo "El DANE no ha publicado nada nuevo. El sitio se queda como esta."
+          fi
+
       - name: Procesar los anexos de la GEIH
+        if: steps.decidir.outputs.publicar == 'si'
         run: python etl.py
 
+      # Esta es la regla que no se negocia. Si las cifras no cuadran, el sitio
+      # se queda con las del mes pasado. Es preferible eso a publicar numeros
+      # equivocados con el logo de la Camara encima.
       - name: Verificar los datos
+        id: verificar
+        if: steps.decidir.outputs.publicar == 'si'
         run: python verificar.py
 
+      - name: Guardar los anexos nuevos en el repo
+        if: steps.descargar.outputs.codigo == '0'
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add datos/ docs/datos.json
+          if git diff --cached --quiet; then
+            echo "Nada que comitear."
+          else
+            git commit -m "Anexos GEIH de ${{ steps.descargar.outputs.cierre }} y datos.json regenerado"
+            git push
+          fi
+
       - uses: actions/configure-pages@v5
+        if: steps.decidir.outputs.publicar == 'si'
       - uses: actions/upload-pages-artifact@v3
+        if: steps.decidir.outputs.publicar == 'si'
         with:
           path: docs
 
   publicar:
     needs: construir
+    if: needs.construir.outputs.publicar == 'si'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
@@ -54,3 +136,65 @@ jobs:
     steps:
       - id: deploy
         uses: actions/deploy-pages@v4
+
+  # Si algo se rompio, que se entere alguien. Un cron que falla en silencio
+  # es lo mismo que no tener cron: el tablero se congela y nadie lo nota
+  # hasta que alguien pregunta por que las cifras estan viejas.
+  avisar:
+    needs: construir
+    if: failure()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const etiqueta = 'actualizacion-automatica';
+            const corrida = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}` +
+                            `/actions/runs/${context.runId}`;
+
+            // Un solo issue abierto a la vez: si el cron falla cinco dias
+            // seguidos, se comenta en el que ya existe en vez de abrir cinco.
+            const abiertos = await github.rest.issues.listForRepo({
+              owner: context.repo.owner, repo: context.repo.repo,
+              state: 'open', labels: etiqueta,
+            });
+
+            const cuerpo = [
+              'La actualizacion automatica del tablero fallo.',
+              '',
+              `- Corrida: ${corrida}`,
+              `- Disparada por: \`${context.eventName}\``,
+              `- Fecha: ${new Date().toISOString().slice(0, 10)}`,
+              '',
+              '**El sitio NO se actualizo.** Sigue mostrando las cifras del mes',
+              'pasado, que es el comportamiento correcto: mejor cifras viejas',
+              'que cifras equivocadas con el logo de la Camara encima.',
+              '',
+              'Que revisar, en orden:',
+              '',
+              '1. Si fallo `verificar.py`, el log dice cual prueba. **No ajustes',
+              '   la prueba para que pase**: entiende primero que cambio en los',
+              '   anexos del DANE. Las reglas que protege estan explicadas en',
+              '   `CLAUDE.md`.',
+              '2. Si fallo `descargar.py`, lo mas probable es que el DANE haya',
+              '   cambiado el nombre o la ruta de los anexos. El respaldo que lee',
+              '   la pagina deberia cubrirlo; si tampoco, hay que revisar',
+              '   `MODULOS` en `descargar.py`.',
+              '3. Si fallo `etl.py`, casi siempre es que un anexo cambio de forma.',
+              '',
+              'Para reintentar a mano: pestana Actions -> este workflow ->',
+              '"Run workflow".',
+            ].join('\n');
+
+            if (abiertos.data.length > 0) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: abiertos.data[0].number, body: cuerpo,
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner, repo: context.repo.repo,
+                title: `La actualizacion automatica del tablero fallo (${new Date().toISOString().slice(0, 10)})`,
+                body: cuerpo, labels: [etiqueta],
+              });
+            }
